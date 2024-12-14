@@ -45,3 +45,4 @@ terraform_files/crash.log
 terraform_files/*.tfvars
 terraform_files/*.tfplan
 
+terraform_files/.terraform/

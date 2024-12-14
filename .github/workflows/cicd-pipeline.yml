@@ -1,12 +1,13 @@
 name: CI/CD Pipeline
 
 on:
-  push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
+  workflow_dispatch: # Enables manual trigger via GitHub Actions UI
+  # push:
+  #   branches:
+  #     - main
+  # pull_request:
+  #   branches:
+  #     - main
 
 env:
   AWS_REGION: "us-east-1"
@@ -42,7 +43,6 @@ jobs:
 
     # Terraform Apply
     - name: Terraform Apply
-      if: github.event_name == 'push'
       run: terraform apply -auto-approve
 
   application:

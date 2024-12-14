@@ -243,6 +243,46 @@ spec:
 
 ---
 
+## **Step 10: Set Up Basic Monitoring**
+1. **Metrics Server**:
+   Install the Kubernetes Metrics Server:
+   ```bash
+   kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
+   ```
+
+2. **Prometheus Installation**:
+   Install Prometheus using Helm:
+   ```bash
+   helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+   helm repo update
+   helm install prometheus prometheus-community/prometheus --namespace monitoring --create-namespace
+   ```
+
+3. **Node Exporter**:
+   Deploy the Node Exporter to monitor node-level metrics:
+   ```bash
+   helm install node-exporter prometheus-community/prometheus-node-exporter --namespace monitoring
+   ```
+
+4. **kube-state-metrics**:
+   Deploy `kube-state-metrics` to monitor Kubernetes resource metrics:
+   ```bash
+   helm install kube-state-metrics prometheus-community/kube-state-metrics --namespace monitoring
+   ```
+
+5. **Access Prometheus**:
+   - Use port forwarding to access Prometheus locally:
+     ```bash
+     kubectl port-forward -n monitoring svc/prometheus-server 9090:80
+     ```
+   - Open [http://localhost:9090](http://localhost:9090) in your browser.
+
+6. **Verify Monitoring**:
+   - Confirm the Prometheus targets in the UI under **Status > Targets**.
+   - Query metrics like `node_cpu_seconds_total` to verify data collection.
+
+---
+
 ## **Notes**
 - The CI/CD pipeline only applies changes to the `main` branch.
 - Ensure all required tools are installed and configured before running the project.
@@ -254,7 +294,6 @@ spec:
 ---
 
 ## **Future Enhancements**
-1. Add Prometheus and Grafana for monitoring.
 2. Integrate logging using Fluentd or the ELK stack.
 3. Include notifications (e.g., Slack or email) for pipeline results.
 

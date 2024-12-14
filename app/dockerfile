@@ -1,41 +1,54 @@
 # Stage 1: Build Stage
 FROM python:3.10-slim AS build
 
-# Set environment variables
+# Set environment variables to streamline Python behavior
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 
 # Install build dependencies
-RUN apt-get update && apt-get install -y \
-    gcc \
-    && apt-get clean
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc libpq-dev \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Create app directory
+# Set working directory
 WORKDIR /app
 
-# Install dependencies
+# Copy and install Python dependencies
 COPY requirements.txt /app/
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy app source code
-COPY . /app/
+# Copy the application source code
+COPY . /app
 
 # Stage 2: Runtime Stage
 FROM python:3.10-slim
 
-# Copy application files from the build stage
-WORKDIR /app
-COPY --from=build /app /app
+# Create a non-root user for security
+RUN useradd --create-home flaskuser
 
 # Set environment variables
-ENV DB_NAME=""
-ENV DB_USER=""
-ENV DB_PASSWORD=""
-ENV DB_HOST=""
-ENV DB_PORT=""
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
 
-# Expose the port
+# Set working directory
+WORKDIR /app
+
+# Copy application and dependencies from the build stage
+COPY --from=build /app /app
+
+# Install runtime dependencies (minimal for production)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libpq-dev \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Change ownership of the app folder to the non-root user
+RUN chown -R flaskuser:flaskuser /app
+
+# Switch to the non-root user
+USER flaskuser
+
+# Expose the application port
 EXPOSE 5000
 
-# Run the app
-CMD ["python", "app.py"]
+# Command to run the application (using gunicorn for production)
+CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:5000", "app:app"]

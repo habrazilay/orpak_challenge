@@ -1,0 +1,33 @@
+# Ignore Terraform-related directories and files under terraform_files/
+terraform_files/.terraform/
+terraform_files/.terraform.lock.hcl
+
+# Ignore Terraform state files
+terraform_files/*.tfstate
+terraform_files/*.tfstate.*
+
+# Ignore Terraform crash logs
+terraform_files/crash.log
+
+# Ignore Terraform variable files
+terraform_files/*.tfvars
+terraform_files/*.tfvars.json
+
+# Ignore override files
+terraform_files/override.tf
+terraform_files/override.tf.json
+terraform_files/*_override.tf
+terraform_files/*_override.tf.json
+
+# Ignore Terraform plan files
+terraform_files/*.tfplan
+
+# Ignore archive files
+terraform_files/*.zip
+terraform_files/*.tar.gz
+terraform_files/*.tar.bz2
+
+# Ignore Terraform CLI configuration files
+terraform_files/.terraformrc
+terraform_files/.terraform.d
+

@@ -1,13 +1,17 @@
 
 # Infrastructure and CI/CD Pipeline for EKS Deployment
 
-This project sets up a scalable and secure infrastructure on AWS using Terraform. It deploys an Nginx web application on an EKS cluster and includes a CI/CD pipeline implemented with GitHub Actions.
+This project sets up a scalable and secure infrastructure on AWS using Terraform. It deploys a Python Flask web application on an EKS cluster, connects to a PostgreSQL database using Kubernetes Secrets, and includes a CI/CD pipeline implemented with GitHub Actions.
+
+---
 
 ## **Features**
 - VPC with public and private subnets
 - NAT Gateway and Internet Gateway for networking
 - Application Load Balancer (ALB) for traffic distribution
 - EKS cluster with managed node groups
+- Multi-stage Docker build for Python app
+- PostgreSQL database access via Kubernetes Secrets
 - CI/CD pipeline for infrastructure provisioning and application deployment
 
 ---
@@ -33,7 +37,10 @@ This project sets up a scalable and secure infrastructure on AWS using Terraform
    - Install `kubectl` for managing Kubernetes clusters: [Install kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/)
    - Version: `>= 1.24`
 
-5. **GitHub Account**
+5. **Docker**
+   - Install Docker: [Docker Installation](https://docs.docker.com/get-docker/)
+
+6. **GitHub Account**
    - Repository with access to GitHub Actions.
    - GitHub Secrets set up with AWS credentials.
 
@@ -77,7 +84,15 @@ trusted_ip = "203.0.113.0/32"
 
 ---
 
-### **Step 4: Deploy the Infrastructure**
+### **Step 4: Create Kubernetes Secrets**
+Store the database credentials securely as Kubernetes Secrets:
+```bash
+kubectl create secret generic postgres-secrets   --from-literal=DB_NAME=mydatabase   --from-literal=DB_USER=myuser   --from-literal=DB_PASSWORD=mypassword   --from-literal=DB_HOST=my-database-host   --from-literal=DB_PORT=5432
+```
+
+---
+
+### **Step 5: Deploy the Infrastructure**
 1. Initialize Terraform:
    ```bash
    terraform init
@@ -97,18 +112,76 @@ trusted_ip = "203.0.113.0/32"
 
 ---
 
-### **Step 5: Set Up GitHub Secrets**
-Add the following secrets to your GitHub repository:
-1. `AWS_ACCESS_KEY_ID`: Your AWS Access Key ID.
-2. `AWS_SECRET_ACCESS_KEY`: Your AWS Secret Access Key.
-
-Navigate to your repository in GitHub:
-- Go to `Settings > Secrets and variables > Actions`.
-- Add the secrets under the `Secrets` section.
+### **Step 6: Build and Push Docker Image**
+1. Build the Docker image for the Python Flask app:
+   ```bash
+   docker build -t your-dockerhub-username/python-flask-app:latest .
+   ```
+2. Push the image to Docker Hub:
+   ```bash
+   docker login
+   docker push your-dockerhub-username/python-flask-app:latest
+   ```
 
 ---
 
-### **Step 6: Deploy via GitHub Actions**
+### **Step 7: Update Kubernetes Deployment**
+1. Update the `kubernetes/deployment.yaml` file to include the Docker image and database secrets:
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flask-app
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: flask-app
+  template:
+    metadata:
+      labels:
+        app: flask-app
+    spec:
+      containers:
+      - name: flask-app
+        image: your-dockerhub-username/python-flask-app:latest
+        ports:
+        - containerPort: 5000
+        env:
+        - name: DB_NAME
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secrets
+              key: DB_NAME
+        - name: DB_USER
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secrets
+              key: DB_USER
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secrets
+              key: DB_PASSWORD
+        - name: DB_HOST
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secrets
+              key: DB_HOST
+        - name: DB_PORT
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secrets
+              key: DB_PORT
+```
+2. Apply the deployment:
+   ```bash
+   kubectl apply -f kubernetes/deployment.yaml
+   ```
+
+---
+
+### **Step 8: Deploy via GitHub Actions**
 1. Push your changes to the `main` branch:
    ```bash
    git add .
@@ -117,18 +190,17 @@ Navigate to your repository in GitHub:
    ```
 2. GitHub Actions will trigger the CI/CD pipeline:
    - Terraform provisions the infrastructure.
-   - Application is deployed to the EKS cluster.
+   - Application is built and deployed to the EKS cluster.
 
 ---
 
-### **Step 7: Verify Deployment**
+### **Step 9: Verify Deployment**
 1. **Check Kubernetes Resources**:
    ```bash
    kubectl get nodes
    kubectl get pods
    kubectl get services
    ```
-
 2. **Access the Application**:
    - The Load Balancer's DNS name is available in the output of Terraform.
    - Example:
@@ -141,6 +213,9 @@ Navigate to your repository in GitHub:
 ## **Project Structure**
 ```plaintext
 .
+├── app.py                  # Python Flask application
+├── requirements.txt        # Python dependencies
+├── Dockerfile              # Multi-stage Docker build
 ├── main.tf                 # Root module for Terraform
 ├── variables.tf            # Root variables
 ├── outputs.tf              # Outputs for root module
@@ -172,9 +247,9 @@ Navigate to your repository in GitHub:
 - The CI/CD pipeline only applies changes to the `main` branch.
 - Ensure all required tools are installed and configured before running the project.
 - To clean up resources, run:
-  ```bash
-  terraform destroy -auto-approve
-  ```
+   ```bash
+   terraform destroy -auto-approve
+   ```
 
 ---
 
@@ -182,3 +257,6 @@ Navigate to your repository in GitHub:
 1. Add Prometheus and Grafana for monitoring.
 2. Integrate logging using Fluentd or the ELK stack.
 3. Include notifications (e.g., Slack or email) for pipeline results.
+
+---
+

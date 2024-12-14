@@ -50,6 +50,10 @@ spec:
             secretKeyRef:
               name: postgres-secrets
               key: DB_PORT
+  securityContext:
+    readOnlyRootFilesystem: true
+    runAsNonRoot: true
+    runAsUser: 1000
 
 ---
 
@@ -105,6 +109,10 @@ spec:
             secretKeyRef:
               name: postgres-secrets
               key: DB_PORT
+  securityContext:
+    readOnlyRootFilesystem: true
+    runAsNonRoot: true
+    runAsUser: 1000
         
 
 

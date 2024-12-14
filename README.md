@@ -293,9 +293,46 @@ spec:
 
 ---
 
-## **Future Enhancements**
-2. Integrate logging using Fluentd or the ELK stack.
-3. Include notifications (e.g., Slack or email) for pipeline results.
+## **Step 11: Set Up Log Aggregation**
+
+### **Step 11.1: Deploy ElasticSearch**
+ElasticSearch stores and indexes logs for fast retrieval. Use Helm to deploy:
+```bash
+helm repo add elastic https://helm.elastic.co
+helm repo update
+helm install elasticsearch elastic/elasticsearch --namespace logging --create-namespace
+```
+
+### **Step 11.2: Deploy Kibana**
+Kibana is used to visualize and query logs stored in ElasticSearch:
+```bash
+helm install kibana elastic/kibana --namespace logging
+```
+
+### **Step 11.3: Deploy Fluentd**
+Fluentd collects and forwards logs from your Kubernetes pods to ElasticSearch:
+```bash
+helm repo add fluent https://fluent.github.io/helm-charts
+helm repo update
+helm install fluentd fluent/fluentd --namespace logging
+```
+
+### **Step 11.4: Verify the ELK Stack**
+1. **Check Pods**:
+   ```bash
+   kubectl get pods -n logging
+   ```
+   Ensure all ELK stack components are running.
+
+2. **Access Kibana**:
+   Use port forwarding to access Kibana locally:
+   ```bash
+   kubectl port-forward -n logging svc/kibana-kibana 5601:5601
+   ```
+   Open Kibana at: [http://localhost:5601](http://localhost:5601)
+
+3. **Test Log Aggregation**:
+   Generate logs from your application and verify them in Kibana.
 
 ---
 

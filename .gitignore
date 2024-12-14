@@ -1,3 +1,25 @@
+# Ignore Terraform directories
+.terraform/
+terraform_files/.terraform/
+
+# Ignore Terraform lock files
+.terraform.lock.hcl
+terraform_files/.terraform.lock.hcl
+
+# Ignore Terraform state and backup files
+*.tfstate
+*.tfstate.*
+
+# Ignore Terraform variable and plan files
+*.tfvars
+*.tfplan
+
+# Ignore override files
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
 # Ignore Terraform-related directories and files under terraform_files/
 terraform_files/.terraform/
 terraform_files/.terraform.lock.hcl

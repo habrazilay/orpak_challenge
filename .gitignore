@@ -31,3 +31,17 @@ terraform_files/*.tar.bz2
 terraform_files/.terraformrc
 terraform_files/.terraform.d
 
+# Ignore Terraform directories
+terraform_files/.terraform/
+terraform_files/.terraform.lock.hcl
+
+# Ignore Terraform state and backup files
+terraform_files/*.tfstate
+terraform_files/*.tfstate.*
+terraform_files/terraform.tfstate.backup
+terraform_files/crash.log
+
+# Ignore Terraform variable and plan files
+terraform_files/*.tfvars
+terraform_files/*.tfplan
+

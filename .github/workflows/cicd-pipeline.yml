@@ -78,3 +78,53 @@ jobs:
       run: |
         kubectl apply -f kubernetes/deployment.yaml
         kubectl apply -f kubernetes/service.yaml
+
+  monitoring:
+    name: Deploy Monitoring Stack
+    runs-on: ubuntu-latest
+    needs: terraform
+
+    steps:
+    # Checkout the repository
+    - name: Checkout Code
+      uses: actions/checkout@v3
+
+    # Configure AWS Credentials
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+
+    # Setup kubectl
+    - name: Setup kubectl
+      uses: azure/setup-kubectl@v3
+      with:
+        version: 'v1.27.3'
+
+    # Authenticate with EKS cluster
+    - name: Update kubeconfig
+      run: aws eks update-kubeconfig --region ${{ env.AWS_REGION }} --name ${{ env.EKS_CLUSTER_NAME }}
+
+    # Deploy Metrics Server
+    - name: Deploy Metrics Server
+      run: |
+        kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
+
+    # Deploy Prometheus
+    - name: Deploy Prometheus
+      run: |
+        helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+        helm repo update
+        helm install prometheus prometheus-community/prometheus --namespace monitoring --create-namespace
+
+    # Deploy Node Exporter
+    - name: Deploy Node Exporter
+      run: |
+        helm install node-exporter prometheus-community/prometheus-node-exporter --namespace monitoring
+
+    # Deploy kube-state-metrics
+    - name: Deploy kube-state-metrics
+      run: |
+        helm install kube-state-metrics prometheus-community/kube-state-metrics --namespace monitoring

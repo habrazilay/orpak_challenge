@@ -4,13 +4,19 @@
 # Virtual Private Cloud:
 
 #############################################
-resource "aws_vpc" "main" {
-  cidr_block = var.cidr_block
-  enable_dns_support = true
-  enable_dns_hostnames = true
+# resource "aws_vpc" "main" {
+#   cidr_block = var.cidr_block
+#   enable_dns_support = true
+#   enable_dns_hostnames = true
 
-  tags = merge(var.common_tags, { "Name" = "main-vpc" })
+#   tags = merge(var.common_tags, { "Name" = "main-vpc" })
+# }
+
+# Uses the default VPC for my simmulation
+data "aws_vpc" "default" {
+  default = true
 }
+
 
 #############################################
 

@@ -25,7 +25,7 @@ variable "common_tags" {
 
 variable "trusted_ip" {
   description = "Trusted IP for SSH access"
-  default     = "192.168.1.1/32" # Replace with your actual IP or placeholder
+  default     = "192.168.1.137/32" # Replace with your actual IP or placeholder
 }
 
 variable "cluster_name" {

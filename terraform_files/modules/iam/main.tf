@@ -16,7 +16,7 @@ data "aws_iam_policy_document" "assume_role_policy" {
   }
 }
 
-# Attach required policies using aws_iam_role_policy_attachment
+# Attach required policies using aws_iam_role_policy_attachment to the role
 resource "aws_iam_role_policy_attachment" "eks_worker_node" {
   role       = aws_iam_role.eks_node_group.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy"
@@ -26,7 +26,7 @@ resource "aws_iam_role_policy_attachment" "eks_cni" {
   role       = aws_iam_role.eks_node_group.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy"
 }
-
+# Maybe I will put my image on my docker hub
 resource "aws_iam_role_policy_attachment" "ecr_read_only" {
   role       = aws_iam_role.eks_node_group.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"

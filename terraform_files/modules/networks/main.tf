@@ -1,32 +1,17 @@
-# modules/networks/main.tf
 #############################################
-
-# Virtual Private Cloud:
-
+# Fetch Default VPC
 #############################################
-# resource "aws_vpc" "main" {
-#   cidr_block = var.cidr_block
-#   enable_dns_support = true
-#   enable_dns_hostnames = true
-
-#   tags = merge(var.common_tags, { "Name" = "main-vpc" })
-# }
-
-# Uses the default VPC for my simmulation
 data "aws_vpc" "default" {
   default = true
 }
 
-
 #############################################
-
-# Public subnets:
-
+# Create Public Subnets in Default VPC
 #############################################
 resource "aws_subnet" "public" {
   for_each           = toset(var.availability_zones) # Loop over availability zones
-  vpc_id             = aws_vpc.main.id
-  cidr_block         = cidrsubnet(var.cidr_block, 8, index(var.availability_zones, each.key))
+  vpc_id             = data.aws_vpc.default.id      # Attach to default VPC
+  cidr_block         = cidrsubnet(data.aws_vpc.default.cidr_block, 8, index(var.availability_zones, each.key))
   availability_zone  = each.key
   map_public_ip_on_launch = true
 
@@ -34,14 +19,12 @@ resource "aws_subnet" "public" {
 }
 
 #############################################
-
-# Private subnets:
-
+# Create Private Subnets in Default VPC
 #############################################
 resource "aws_subnet" "private" {
   for_each           = toset(var.availability_zones) # Loop over availability zones
-  vpc_id             = aws_vpc.main.id
-  cidr_block         = cidrsubnet(var.cidr_block, 8, index(var.availability_zones, each.key) + length(var.availability_zones))
+  vpc_id             = data.aws_vpc.default.id      # Attach to default VPC
+  cidr_block         = cidrsubnet(data.aws_vpc.default.cidr_block, 8, index(var.availability_zones, each.key) + length(var.availability_zones))
   availability_zone  = each.key
   map_public_ip_on_launch = false
 
@@ -49,111 +32,71 @@ resource "aws_subnet" "private" {
 }
 
 #############################################
-
-# Internet Gateway:
-
+# Use Existing Internet Gateway from Default VPC
 #############################################
-resource "aws_internet_gateway" "main" {
-  vpc_id = aws_vpc.main.id
-
-  tags = merge(var.common_tags, { Name = "Main" })
+data "aws_internet_gateway" "default" {
+  filter {
+    name   = "attachment.vpc-id"
+    values = [data.aws_vpc.default.id]
+  }
 }
 
 #############################################
-
-# NAT's:
-
+# NAT Gateway for Private Subnets
 #############################################
 resource "aws_nat_gateway" "nat" {
   for_each       = toset(var.availability_zones)
   allocation_id  = aws_eip.nat[each.key].id
-  subnet_id      = aws_subnet.public[each.key].id
+  subnet_id      = aws_subnet.public[each.key].id # Attach NAT Gateway to public subnets
 
-  tags = {
-    Name = "nat-gateway-${each.key}"
-  }
-
-  depends_on = [aws_internet_gateway.main]
+  tags = merge(var.common_tags, { Name = "nat-gateway-${each.key}" })
 }
 
-#############################################
-
-# Elastic IP for NAT Gateways:
-
-#############################################
-
+# Elastic IP for NAT Gateways
 resource "aws_eip" "nat" {
   for_each = toset(var.availability_zones)
 
-  tags = {
-    Name = "eip-for-nat-${each.key}"
-  }
+  tags = merge(var.common_tags, { Name = "eip-for-nat-${each.key}" })
 }
 
-
 #############################################
-
-# Public Route:
-
+# Public Route Table for Public Subnets
 #############################################
 resource "aws_route_table" "public" {
-  for_each = toset(var.availability_zones)
-  vpc_id   = aws_vpc.main.id
+  vpc_id = data.aws_vpc.default.id
 
   route {
     cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.main.id
+    gateway_id = data.aws_internet_gateway.default.id # Use default Internet Gateway
   }
 
-  tags = merge(var.common_tags, { Name = "public-rt-${each.key}", Type = "Public" })
+  tags = merge(var.common_tags, { Name = "public-rt", Type = "Public" })
 }
 
-# Public Route Table Associations
+# Associate Public Subnets with Public Route Table
 resource "aws_route_table_association" "public" {
   for_each       = toset(var.availability_zones)
   subnet_id      = aws_subnet.public[each.key].id
-  route_table_id = aws_route_table.public[each.key].id
+  route_table_id = aws_route_table.public.id
 }
 
 #############################################
-
-# Private Route:
-
+# Private Route Table for Private Subnets
 #############################################
 resource "aws_route_table" "private" {
-  for_each = toset(var.availability_zones)
-  vpc_id   = aws_vpc.main.id
+  vpc_id = data.aws_vpc.default.id
 
   route {
     cidr_block = "0.0.0.0/0"
-    gateway_id = aws_nat_gateway.nat[each.key].id
+    gateway_id = aws_nat_gateway.nat[each.key].id # Route through NAT Gateway
   }
 
-  tags = merge(var.common_tags, { Name = "private-rt-${each.key}", Type = "Private" })
+  tags = merge(var.common_tags, { Name = "private-rt", Type = "Private" })
 }
 
-# Private Route Table Associations
+# Associate Private Subnets with Private Route Table
 resource "aws_route_table_association" "private" {
   for_each       = toset(var.availability_zones)
   subnet_id      = aws_subnet.private[each.key].id
-  route_table_id = aws_route_table.private[each.key].id
+  route_table_id = aws_route_table.private.id
 }
-
-####################################################
-# Application Load balancer
-####################################################
-resource "aws_alb" "alb1" {
-  name               = "alb1"
-  internal           = false
-  # security_groups    = [aws_security_group.alb.id]
-  security_groups = ["sg-0123456789abcdef0"]  # Simulated placeholders
-  # subnets            = aws_subnet.public[*].id
-  subnets = ["subnet-0123456789abcdef0", "subnet-abcdef0123456789"]  # Simulated placeholders
-
-
-  enable_deletion_protection     = false
-  enable_cross_zone_load_balancing = true
-
-  tags      = var.common_tags
-}
-

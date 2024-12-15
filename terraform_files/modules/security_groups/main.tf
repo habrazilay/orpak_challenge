@@ -2,10 +2,10 @@
 #############################################
 # Webserver and Load Balancer Security Group
 #############################################
-resource "aws_security_group" "web_and_alb" {
-  name        = "web-and-alb"
-  description = "Allow traffic for ALB and web server"
-  vpc_id      = var.vpc_id
+resource "aws_security_group" "alb" {
+  name        = "alb-sg"
+  description = "Allow inbound traffic to the ALB"
+  vpc_id      = module.networks.vpc_id
 
   ingress {
     description = "Allow HTTP traffic"
@@ -23,14 +23,6 @@ resource "aws_security_group" "web_and_alb" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  ingress {
-    description = "Allow SSH from trusted IP"
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-    cidr_blocks = [var.trusted_ip]
-  }
-
   egress {
     description = "Allow all outbound traffic"
     from_port   = 0
@@ -39,7 +31,7 @@ resource "aws_security_group" "web_and_alb" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags = merge(var.common_tags, { Name = "web-and-alb" })
+  tags = merge(var.common_tags, { Name = "alb-sg" })
 }
 
 #############################################

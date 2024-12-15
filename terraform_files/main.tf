@@ -10,8 +10,7 @@ module "security_groups" {
   vpc_id      = module.networks.vpc_id
   cidr_block  = module.networks.cidr_block
   common_tags = var.common_tags
-  alb_sg_id   = aws_security_group.alb.id
-  # alb_sg_id   = "sg-0123456789abcdef0"  # Simulated placeholder
+  alb_sg_id   = aws_security_group.alb.id 
 }
 
 # Instantiate the IAM roles

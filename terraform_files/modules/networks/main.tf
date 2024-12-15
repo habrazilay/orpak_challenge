@@ -10,9 +10,10 @@ data "aws_vpc" "default" {
 # Create a Single Public Subnet in Default VPC
 #############################################
 resource "aws_subnet" "public" {
-  vpc_id                  = data.aws_vpc.default.id       
-  cidr_block              = "10.0.0.0/24"
-  availability_zone       = var.availability_zones[0]     
+  vpc_id                  = data.aws_vpc.default.id
+  cidr_block              = "172.31.0.0/20" # Adjusted to fit within Default VPC
+  availability_zone       = var.availability_zones[0]
+  map_public_ip_on_launch = true
 
   tags = merge(var.common_tags, { Name = "public-subnet", Type = "Public" })
 }
@@ -21,9 +22,9 @@ resource "aws_subnet" "public" {
 # Create a Single Private Subnet in Default VPC
 #############################################
 resource "aws_subnet" "private" {
-  vpc_id                  = data.aws_vpc.default.id      
-  cidr_block              = "10.0.1.0/24"
-  availability_zone       = var.availability_zones[0]     
+  vpc_id                  = data.aws_vpc.default.id
+  cidr_block              = "172.31.16.0/20" # Adjusted to fit within Default VPC
+  availability_zone       = var.availability_zones[0]
   map_public_ip_on_launch = false
 
   tags = merge(var.common_tags, { Name = "private-subnet", Type = "Private" })

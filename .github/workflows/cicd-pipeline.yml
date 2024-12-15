@@ -37,13 +37,13 @@ jobs:
     - name: Terraform Validate
       run: terraform validate
 
-    # Terraform Plan
-    - name: Terraform Plan
-      run: terraform plan
+    # # Terraform Plan
+    # - name: Terraform Plan
+    #   run: terraform plan
 
-    # Terraform Apply
-    - name: Terraform Apply
-      run: terraform apply -auto-approve
+    # # Terraform Apply
+    # - name: Terraform Apply
+    #   run: terraform apply -auto-approve
 
   application:
     name: Application Deployment

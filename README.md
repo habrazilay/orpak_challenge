@@ -13,8 +13,6 @@ This project sets up a scalable and secure infrastructure on AWS using Terraform
 - Multi-stage Docker build for Python app
 - PostgreSQL database access via Kubernetes Secrets
 - CI/CD pipeline for infrastructure provisioning and application deployment
-- Basic monitoring with Prometheus and Kubernetes Metrics Server
-- Log aggregation using ElasticSearch, Fluentd, and Kibana (ELK)
 
 ---
 

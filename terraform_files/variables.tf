@@ -61,7 +61,7 @@ variable "node_group_min" {
 variable "node_group_instance_types" {
   description = "Instance types for EKS nodes"
   type        = list(string)
-  default     = ["t3.medium"]
+  default     = ["t2.micro"] # For simulation, regular reccomentdation t3.medium
 }
 
 variable "additional_iam_role_arn" {

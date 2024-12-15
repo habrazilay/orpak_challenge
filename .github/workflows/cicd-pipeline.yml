@@ -1,4 +1,4 @@
-name: CI/CD Pipeline
+name: Terraform
 
 on:
   # workflow_dispatch: # Enables manual trigger via GitHub Actions UI
@@ -48,10 +48,10 @@ jobs:
       working-directory: terraform_files
       run: terraform plan -out=tfplan
 
-  #   # Terraform Apply
-  #   - name: Terraform Apply
-  #     working-directory: terraform_files
-  #     run: terraform apply -auto-approve tfplan
+    # Terraform Apply
+    - name: Terraform Apply
+      working-directory: terraform_files
+      run: terraform apply -auto-approve tfplan
       
   # application:
   #   name: Application Deployment

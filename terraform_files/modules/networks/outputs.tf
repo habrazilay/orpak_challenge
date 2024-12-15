@@ -13,4 +13,9 @@ output "private_subnets" {
   value       = aws_subnet.private[*].id
 }
 
+output "cidr_block" {
+  description = "The CIDR block of the VPC"
+  value       = data.aws_vpc.default.cidr_block # If using the default VPC
+}
+
 

@@ -8,10 +8,10 @@ provider "aws" {
 module "security_groups" {
   source      = "./modules/security_groups"
   vpc_id      = module.networks.vpc_id
-  cidr_block  = module.networks.cidr_block 
+  cidr_block  = module.networks.cidr_block
   common_tags = var.common_tags
-  # alb_sg_id   = aws_security_group.alb.id
-  alb_sg_id   = "sg-0123456789abcdef0"  # Simulated placeholder
+  alb_sg_id   = aws_security_group.alb.id
+  # alb_sg_id   = "sg-0123456789abcdef0"  # Simulated placeholder
 }
 
 # Instantiate the IAM roles
@@ -42,8 +42,8 @@ module "networks" {
   cidr_block         = var.cidr_block
   availability_zones = var.availability_zones
   common_tags        = var.common_tags
-  # web_and_alb_sg_id = module.security_groups.web_and_alb_sg_id
-  web_and_alb_sg_id  = "sg-0123456789abcdef0" # Simulated placeholders
+  web_and_alb_sg_id = module.security_groups.web_and_alb_sg_id
+  # web_and_alb_sg_id  = "sg-0123456789abcdef0" # Simulated placeholders
 }
 
 

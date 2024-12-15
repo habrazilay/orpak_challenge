@@ -19,12 +19,6 @@ jobs:
     - name: Checkout Code
       uses: actions/checkout@v3
 
-    # Setup Terraform
-    - name: Setup Terraform
-      uses: hashicorp/setup-terraform@v2
-      with:
-        terraform_wrapper: false
-
     # Configure AWS Credentials
     - name: Configure AWS Credentials
       uses: aws-actions/configure-aws-credentials@v2
@@ -32,27 +26,32 @@ jobs:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: ${{ vars.AWS_REGION }}
-      # # continue-on-error: true # For simulation
 
-    # Verify AWS Credentials
-    - name: Verify AWS Credentials
-      run: aws sts get-caller-identity
+    # Setup Terraform
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v2
+      with:
+        terraform_wrapper: false
 
     # Initialize Terraform
     - name: Terraform Init
+      working-directory: terraform_files
       run: terraform init
 
-    # Validate Terraform configuration
+    # Validate Terraform Configuration
     - name: Terraform Validate
+      working-directory: terraform_files
       run: terraform validate
 
-    # Terraform Plan with logs
+    # Terraform Plan
     - name: Terraform Plan
-      run: terraform plan -out=tfplan && terraform show -json tfplan > plan.json
+      working-directory: terraform_files
+      run: terraform plan -out=tfplan
 
     # Terraform Apply
     - name: Terraform Apply
-      run: terraform apply -auto-approve
+      working-directory: terraform_files
+      run: terraform apply -auto-approve tfplan
       
   application:
     name: Application Deployment

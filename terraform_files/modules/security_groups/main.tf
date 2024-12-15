@@ -5,7 +5,7 @@
 resource "aws_security_group" "alb" {
   name        = "alb-sg"
   description = "Allow inbound traffic to the ALB"
-  vpc_id      = module.networks.vpc_id
+  vpc_id      = var.vpc_id # Use variable instead of module reference
 
   ingress {
     description = "Allow HTTP traffic"
@@ -33,6 +33,7 @@ resource "aws_security_group" "alb" {
 
   tags = merge(var.common_tags, { Name = "alb-sg" })
 }
+
 
 #############################################
 # Private Security Group (e.g., EKS, RDS, etc.)

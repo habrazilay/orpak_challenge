@@ -10,7 +10,6 @@ module "security_groups" {
   vpc_id      = module.networks.vpc_id
   cidr_block  = module.networks.cidr_block
   common_tags = var.common_tags
-  alb_sg_id   = aws_security_group.alb.id 
 }
 
 # Instantiate the IAM roles
@@ -31,7 +30,7 @@ module "eks" {
   node_group_min     = var.node_group_min
   node_group_instance_types = var.node_group_instance_types
   common_tags        = var.common_tags
-  alb_sg_ids = [module.security_groups.web_and_alb_sg_id]
+  alb_sg_ids = [module.security_groups.alb_sg_id]
   additional_iam_role_arn = var.additional_iam_role_arn
 }
 
@@ -41,8 +40,7 @@ module "networks" {
   cidr_block         = var.cidr_block
   availability_zones = var.availability_zones
   common_tags        = var.common_tags
-  web_and_alb_sg_id = module.security_groups.web_and_alb_sg_id
-  # web_and_alb_sg_id  = "sg-0123456789abcdef0" # Simulated placeholders
+  alb_sg_id          = module.security_groups.alb_sg_id # Pass the renamed variable
 }
 
 

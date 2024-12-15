@@ -1,5 +1,5 @@
 # modules/networks/variables.tf
-variable "web_and_alb_sg_id" {
+variable "alb_sg_id" {
   description = "List of security group IDs for the ALB"
   type        = string
 }

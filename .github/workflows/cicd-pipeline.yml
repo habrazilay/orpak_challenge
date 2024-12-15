@@ -25,6 +25,15 @@ jobs:
       with:
         terraform_wrapper: false
 
+    # Configure AWS Credentials
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+      # # continue-on-error: true # For simulation
+
     # Verify AWS Credentials
     - name: Verify AWS Credentials
       run: aws sts get-caller-identity
@@ -55,14 +64,14 @@ jobs:
     - name: Checkout Code
       uses: actions/checkout@v3
 
-    # Configure AWS Credentials
-    - name: Configure AWS Credentials
-      uses: aws-actions/configure-aws-credentials@v2
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: ${{ env.AWS_REGION }}
-      # # continue-on-error: true # For simulation
+    # # Configure AWS Credentials
+    # - name: Configure AWS Credentials
+    #   uses: aws-actions/configure-aws-credentials@v2
+    #   with:
+    #     aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+    #     aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+    #     aws-region: ${{ env.AWS_REGION }}
+    #   # # continue-on-error: true # For simulation
 
   #   # Setup kubectl
   #   - name: Setup kubectl

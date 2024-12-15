@@ -12,11 +12,11 @@ module "security_groups" {
   common_tags = var.common_tags
 }
 
-# Instantiate the IAM roles
-module "iam" {
-  source = "./modules/iam"
-  common_tags = var.common_tags
-}
+# # Instantiate the IAM roles
+# module "iam" {
+#   source = "./modules/iam"
+#   common_tags = var.common_tags
+# }
 
 # # Instantiate the EKS module
 # module "eks" {

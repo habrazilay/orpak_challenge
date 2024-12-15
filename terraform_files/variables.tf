@@ -68,6 +68,7 @@ variable "node_group_instance_types" {
 variable "additional_iam_role_arn" {
   description = "IAM role ARN to attach to the node group"
   type        = string
+  default     = "arn:aws:iam::503561459373:role/eks-nodegroup-role" # If I have time, will create a var on github
 }
 
 

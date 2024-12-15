@@ -22,3 +22,14 @@ module "eks" {
   }
   tags      = var.common_tags
 }
+resource "aws_eks_cluster" "this" {
+  name     = var.cluster_name
+  role_arn = var.cluster_role_arn
+
+  vpc_config {
+    subnet_ids = coalescelist(var.control_plane_subnet_ids, var.private_subnets)
+  }
+
+  tags = var.common_tags
+}
+

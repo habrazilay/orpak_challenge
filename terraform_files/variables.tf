@@ -1,6 +1,7 @@
+# terraform_files/variables.tf
 variable "cidr_block" {
   description = "CIDR block for the VPC"
-  default     = "10.0.0.0/16"
+  default     = "10.0.0.0/16" # We can use env vars instead
 }
 
 variable "aws_region" {
@@ -25,13 +26,13 @@ variable "common_tags" {
 
 variable "trusted_ip" {
   description = "Trusted IP for SSH access"
-  default     = "192.168.1.137/32" # Replace with your actual IP or placeholder
+  default     = "192.168.1.137/32" # Replace with your actual IP or placeholder or We can use env vars instead
 }
 
 variable "cluster_name" {
   description = "EKS cluster name"
   type        = string
-  default     = "my-eks-cluster"
+  default     = "my-eks-cluster" # We can use env vars instead
 }
 
 variable "cluster_version" {

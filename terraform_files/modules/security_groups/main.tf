@@ -1,3 +1,4 @@
+# terraform_files/modules/security_groups/main.tf
 #############################################
 # Webserver and Load Balancer Security Group
 #############################################
@@ -11,7 +12,7 @@ resource "aws_security_group" "web_and_alb" {
     from_port   = 80
     to_port     = 80
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"] # Public access
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
   ingress {
@@ -19,7 +20,7 @@ resource "aws_security_group" "web_and_alb" {
     from_port   = 443
     to_port     = 443
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"] # Public access
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
   ingress {
@@ -34,7 +35,7 @@ resource "aws_security_group" "web_and_alb" {
     description = "Allow all outbound traffic"
     from_port   = 0
     to_port     = 0
-    protocol    = "-1" # All protocols
+    protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
 
@@ -49,32 +50,35 @@ resource "aws_security_group" "private_sg" {
   description = "Allow internal traffic for private instances"
   vpc_id      = var.vpc_id
 
-  # Allow inbound traffic from the public security group (ALB -> Private Subnets)
-  ingress {
-    description = "Allow traffic from ALB and public resources"
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    # source_security_group_id = aws_security_group.web_and_alb.id
-  }
 
-  # Allow all internal traffic within the VPC
   ingress {
     description = "Allow all internal traffic"
     from_port   = 0
     to_port     = 0
-    protocol    = "-1" # All protocols
-    # cidr_blocks = [var.cidr_block]
+    protocol    = "-1"
+    cidr_blocks = [var.cidr_block]
   }
 
-  # Outbound: Allow traffic to the internet through NAT Gateway
   egress {
     description = "Allow outbound internet access"
     from_port   = 0
     to_port     = 0
-    protocol    = "-1" # All protocols
+    protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
 
   tags = merge(var.common_tags, { Name = "private-sg" })
+}
+
+#############################################
+# Rule for Traffic from Web and ALB Security Group
+#############################################
+resource "aws_security_group_rule" "allow_alb_to_private" {
+  type                     = "ingress"
+  from_port                = 80
+  to_port                  = 80
+  protocol                 = "tcp"
+  source_security_group_id = aws_security_group.web_and_alb.id
+  security_group_id        = aws_security_group.private_sg.id
+  description              = "Allow traffic from ALB to private SG"
 }

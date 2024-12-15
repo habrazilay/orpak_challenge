@@ -1,4 +1,4 @@
-# main.tf
+# terraform_files/main.tf
 # Provider configuration
 provider "aws" {
   region = var.aws_region
@@ -8,11 +8,10 @@ provider "aws" {
 module "security_groups" {
   source      = "./modules/security_groups"
   vpc_id      = module.networks.vpc_id
+  cidr_block  = module.networks.cidr_block 
   common_tags = var.common_tags
-
-  # Provide the ALB SG ID
-  # alb_sg_id = aws_security_group.alb.id  # Replace with the actual source of the ALB SG ID
-  alb_sg_id = "sg-0123456789abcdef0"  # Simulated placeholders
+  # alb_sg_id   = aws_security_group.alb.id
+  alb_sg_id   = "sg-0123456789abcdef0"  # Simulated placeholder
 }
 
 # Instantiate the IAM roles
@@ -33,11 +32,7 @@ module "eks" {
   node_group_min     = var.node_group_min
   node_group_instance_types = var.node_group_instance_types
   common_tags        = var.common_tags
-
-  # Pass the ALB Security Group ID(s) from the security_groups module
   alb_sg_ids = [module.security_groups.web_and_alb_sg_id]
-
-  # Provide the required IAM role ARN
   additional_iam_role_arn = var.additional_iam_role_arn
 }
 

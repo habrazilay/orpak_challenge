@@ -1,3 +1,4 @@
+# terraform_files/outputs.tf
 output "vpc_id" {
   value = module.networks.vpc_id
 }

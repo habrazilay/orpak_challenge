@@ -84,14 +84,15 @@ resource "aws_route_table_association" "public" {
 # Private Route Table for Private Subnets
 #############################################
 resource "aws_route_table" "private" {
-  vpc_id = data.aws_vpc.default.id
+  for_each = toset(var.availability_zones)
+  vpc_id   = data.aws_vpc.default.id
 
   route {
     cidr_block = "0.0.0.0/0"
     gateway_id = aws_nat_gateway.nat[each.key].id # Route through NAT Gateway
   }
 
-  tags = merge(var.common_tags, { Name = "private-rt", Type = "Private" })
+  tags = merge(var.common_tags, { Name = "private-rt-${each.key}", Type = "Private" })
 }
 
 # Associate Private Subnets with Private Route Table

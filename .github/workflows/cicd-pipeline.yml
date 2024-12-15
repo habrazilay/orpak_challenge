@@ -10,15 +10,16 @@ on:
       - main
 
 jobs:
-  # Step 1: IAM Roles
-  iam:
-    name: IAM Role Setup
+  terraform:
+    name: Terraform Workflow
     runs-on: ubuntu-latest
 
     steps:
+    # Checkout the repository
     - name: Checkout Code
       uses: actions/checkout@v3
 
+    # Configure AWS Credentials
     - name: Configure AWS Credentials
       uses: aws-actions/configure-aws-credentials@v2
       with:
@@ -26,140 +27,26 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: ${{ vars.AWS_REGION }}
 
+    # Setup Terraform
     - name: Setup Terraform
       uses: hashicorp/setup-terraform@v2
       with:
         terraform_wrapper: false
 
-    - name: Initialize Terraform (IAM)
-      working-directory: terraform_files/modules/iam
+    # Initialize Terraform
+    - name: Terraform Init
+      working-directory: terraform_files
       run: terraform init
 
-    - name: Validate Terraform (IAM)
-      working-directory: terraform_files/modules/iam
+    # Validate Terraform Configuration
+    - name: Terraform Validate
+      working-directory: terraform_files
       run: terraform validate
 
-    - name: Plan Terraform (IAM)
-      working-directory: terraform_files/modules/iam
+    # Terraform Plan
+    - name: Terraform Plan
+      working-directory: terraform_files
       run: terraform plan -out=tfplan
-
-    # - name: Apply Terraform (IAM)
-    #   working-directory: terraform_files/modules/iam
-    #   run: terraform apply -auto-approve tfplan
-
-  # Step 2: Network Infrastructure
-  networks:
-    name: Network Setup
-    runs-on: ubuntu-latest
-    needs: iam
-
-    steps:
-    - name: Checkout Code
-      uses: actions/checkout@v3
-
-    - name: Configure AWS Credentials
-      uses: aws-actions/configure-aws-credentials@v2
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: ${{ vars.AWS_REGION }}
-
-    - name: Setup Terraform
-      uses: hashicorp/setup-terraform@v2
-      with:
-        terraform_wrapper: false
-
-    - name: Initialize Terraform (Networks)
-      working-directory: terraform_files/modules/networks
-      run: terraform init
-
-    - name: Validate Terraform (Networks)
-      working-directory: terraform_files/modules/networks
-      run: terraform validate
-
-    - name: Plan Terraform (Networks)
-      working-directory: terraform_files/modules/networks
-      run: terraform plan -out=tfplan
-
-    # - name: Apply Terraform (Networks)
-    #   working-directory: terraform_files/modules/networks
-    #   run: terraform apply -auto-approve tfplan
-
-  # Step 3: Security Groups
-  security_groups:
-    name: Security Groups Setup
-    runs-on: ubuntu-latest
-    needs: networks
-
-    steps:
-    - name: Checkout Code
-      uses: actions/checkout@v3
-
-    - name: Configure AWS Credentials
-      uses: aws-actions/configure-aws-credentials@v2
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: ${{ vars.AWS_REGION }}
-
-    - name: Setup Terraform
-      uses: hashicorp/setup-terraform@v2
-      with:
-        terraform_wrapper: false
-
-    - name: Initialize Terraform (Security Groups)
-      working-directory: terraform_files/modules/security_groups
-      run: terraform init
-
-    - name: Validate Terraform (Security Groups)
-      working-directory: terraform_files/modules/security_groups
-      run: terraform validate
-
-    - name: Plan Terraform (Security Groups)
-      working-directory: terraform_files/modules/security_groups
-      run: terraform plan -out=tfplan
-
-    # - name: Apply Terraform (Security Groups)
-    #   working-directory: terraform_files/modules/security_groups
-    #   run: terraform apply -auto-approve tfplan
-
-  # Step 4: EKS Cluster
-  eks:
-    name: EKS Cluster Setup
-    runs-on: ubuntu-latest
-    needs: security_groups
-
-    steps:
-    - name: Checkout Code
-      uses: actions/checkout@v3
-
-    - name: Configure AWS Credentials
-      uses: aws-actions/configure-aws-credentials@v2
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: ${{ vars.AWS_REGION }}
-
-    - name: Setup Terraform
-      uses: hashicorp/setup-terraform@v2
-      with:
-        terraform_wrapper: false
-
-    - name: Initialize Terraform (EKS)
-      working-directory: terraform_files/modules/eks
-      run: terraform init
-
-    - name: Validate Terraform (EKS)
-      working-directory: terraform_files/modules/eks
-      run: terraform validate
-
-    - name: Plan Terraform (EKS)
-      working-directory: terraform_files/modules/eks
-      run: terraform plan -out=tfplan
-
-    # - name: Apply Terraform (EKS)
-    #   working-directory: terraform_files/modules/eks
-    #   run: terraform apply -auto-approve tfplan
 
   #   # Terraform Apply
   #   - name: Terraform Apply
@@ -184,7 +71,7 @@ jobs:
 
   #   # Authenticate with EKS cluster
   #   - name: Update kubeconfig
-  #     run: aws eks update-kubeconfig --region ${{ vars.AWS_REGION }} --name ${{ vars.EKS_CLUSTER_NAME }}
+  #     run: aws eks update-kubeconfig --region ${{ env.AWS_REGION }} --name ${{ env.EKS_CLUSTER_NAME }}
 
   #   # Deploy to Kubernetes
   #   - name: Deploy Application
@@ -208,7 +95,7 @@ jobs:
   #     with:
   #       aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
   #       aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-  #       aws-region: ${{ vars.AWS_REGION }}
+  #       aws-region: ${{ env.AWS_REGION }}
   #     # continue-on-error: true # For simulation
 
   #   # Setup kubectl
@@ -219,7 +106,7 @@ jobs:
 
   #   # Authenticate with EKS cluster
   #   - name: Update kubeconfig
-  #     run: aws eks update-kubeconfig --region ${{ vars.AWS_REGION }} --name ${{ vars.EKS_CLUSTER_NAME }}
+  #     run: aws eks update-kubeconfig --region ${{ env.AWS_REGION }} --name ${{ env.EKS_CLUSTER_NAME }}
 
   #   # Deploy Metrics Server
   #   - name: Deploy Metrics Server
@@ -259,7 +146,7 @@ jobs:
   #     with:
   #       aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
   #       aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-  #       aws-region: ${{ vars.AWS_REGION }}
+  #       aws-region: ${{ env.AWS_REGION }}
   #     # continue-on-error: true # For simulation
 
   #   # Setup kubectl
@@ -270,7 +157,7 @@ jobs:
 
   #   # Authenticate with EKS cluster
   #   - name: Update kubeconfig
-  #     run: aws eks update-kubeconfig --region ${{ vars.AWS_REGION }} --name ${{ vars.EKS_CLUSTER_NAME }}
+  #     run: aws eks update-kubeconfig --region ${{ env.AWS_REGION }} --name ${{ env.EKS_CLUSTER_NAME }}
 
   #   # Deploy ElasticSearch
   #   - name: Deploy ElasticSearch

@@ -29,10 +29,11 @@ module "eks" {
   node_group_max     = var.node_group_max
   node_group_min     = var.node_group_min
   node_group_instance_types = var.node_group_instance_types
-  common_tags        = var.common_tags
-  alb_sg_ids = [module.security_groups.alb_sg_id]
-  additional_iam_role_arn = var.additional_iam_role_arn
+  alb_sg_ids         = [module.security_groups.alb_sg_id]
+  additional_iam_role_arn   = var.additional_iam_role_arn
+  common_tags = var.common_tags
 }
+
 
 # Instantiate the networks module
 module "networks" {

@@ -24,7 +24,7 @@ jobs:
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: ${{ var.AWS_REGION }}
+        aws-region: ${{ vars.AWS_REGION }}
 
     - name: Setup Terraform
       uses: hashicorp/setup-terraform@v2
@@ -62,7 +62,7 @@ jobs:
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: ${{ env.AWS_REGION }}
+        aws-region: ${{ vars.AWS_REGION }}
 
     - name: Setup Terraform
       uses: hashicorp/setup-terraform@v2
@@ -100,7 +100,7 @@ jobs:
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: ${{ env.AWS_REGION }}
+        aws-region: ${{ vars.AWS_REGION }}
 
     - name: Setup Terraform
       uses: hashicorp/setup-terraform@v2
@@ -138,7 +138,7 @@ jobs:
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: ${{ env.AWS_REGION }}
+        aws-region: ${{ vars.AWS_REGION }}
 
     - name: Setup Terraform
       uses: hashicorp/setup-terraform@v2
@@ -184,7 +184,7 @@ jobs:
 
   #   # Authenticate with EKS cluster
   #   - name: Update kubeconfig
-  #     run: aws eks update-kubeconfig --region ${{ env.AWS_REGION }} --name ${{ env.EKS_CLUSTER_NAME }}
+  #     run: aws eks update-kubeconfig --region ${{ vars.AWS_REGION }} --name ${{ vars.EKS_CLUSTER_NAME }}
 
   #   # Deploy to Kubernetes
   #   - name: Deploy Application
@@ -208,7 +208,7 @@ jobs:
   #     with:
   #       aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
   #       aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-  #       aws-region: ${{ env.AWS_REGION }}
+  #       aws-region: ${{ vars.AWS_REGION }}
   #     # continue-on-error: true # For simulation
 
   #   # Setup kubectl
@@ -219,7 +219,7 @@ jobs:
 
   #   # Authenticate with EKS cluster
   #   - name: Update kubeconfig
-  #     run: aws eks update-kubeconfig --region ${{ env.AWS_REGION }} --name ${{ env.EKS_CLUSTER_NAME }}
+  #     run: aws eks update-kubeconfig --region ${{ vars.AWS_REGION }} --name ${{ vars.EKS_CLUSTER_NAME }}
 
   #   # Deploy Metrics Server
   #   - name: Deploy Metrics Server
@@ -259,7 +259,7 @@ jobs:
   #     with:
   #       aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
   #       aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-  #       aws-region: ${{ env.AWS_REGION }}
+  #       aws-region: ${{ vars.AWS_REGION }}
   #     # continue-on-error: true # For simulation
 
   #   # Setup kubectl
@@ -270,7 +270,7 @@ jobs:
 
   #   # Authenticate with EKS cluster
   #   - name: Update kubeconfig
-  #     run: aws eks update-kubeconfig --region ${{ env.AWS_REGION }} --name ${{ env.EKS_CLUSTER_NAME }}
+  #     run: aws eks update-kubeconfig --region ${{ vars.AWS_REGION }} --name ${{ vars.EKS_CLUSTER_NAME }}
 
   #   # Deploy ElasticSearch
   #   - name: Deploy ElasticSearch

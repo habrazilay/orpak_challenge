@@ -1,3 +1,4 @@
+# terraform_files/modules/networks/main.tf
 #############################################
 # Fetch Default VPC
 #############################################
@@ -6,29 +7,26 @@ data "aws_vpc" "default" {
 }
 
 #############################################
-# Create Public Subnets in Default VPC
+# Create a Single Public Subnet in Default VPC
 #############################################
 resource "aws_subnet" "public" {
-  for_each           = toset(var.availability_zones) # Loop over availability zones
-  vpc_id             = data.aws_vpc.default.id      # Attach to default VPC
-  cidr_block         = cidrsubnet(data.aws_vpc.default.cidr_block, 8, index(var.availability_zones, each.key))
-  availability_zone  = each.key
-  map_public_ip_on_launch = true
+  vpc_id                  = data.aws_vpc.default.id       
+  cidr_block              = cidrsubnet(data.aws_vpc.default.cidr_block, 8, 0) 
+  availability_zone       = var.availability_zones[0]     
 
-  tags = merge(var.common_tags, { Name = "public-subnet-${each.key}", Type = "Public" })
+  tags = merge(var.common_tags, { Name = "public-subnet", Type = "Public" })
 }
 
 #############################################
-# Create Private Subnets in Default VPC
+# Create a Single Private Subnet in Default VPC
 #############################################
 resource "aws_subnet" "private" {
-  for_each           = toset(var.availability_zones) # Loop over availability zones
-  vpc_id             = data.aws_vpc.default.id      # Attach to default VPC
-  cidr_block         = cidrsubnet(data.aws_vpc.default.cidr_block, 8, index(var.availability_zones, each.key) + length(var.availability_zones))
-  availability_zone  = each.key
+  vpc_id                  = data.aws_vpc.default.id      
+  cidr_block              = cidrsubnet(data.aws_vpc.default.cidr_block, 8, 1)
+  availability_zone       = var.availability_zones[0]     
   map_public_ip_on_launch = false
 
-  tags = merge(var.common_tags, { Name = "private-subnet-${each.key}", Type = "Private" })
+  tags = merge(var.common_tags, { Name = "private-subnet", Type = "Private" })
 }
 
 #############################################
@@ -42,62 +40,56 @@ data "aws_internet_gateway" "default" {
 }
 
 #############################################
-# NAT Gateway for Private Subnets
+# NAT Gateway for Private Subnet
 #############################################
 resource "aws_nat_gateway" "nat" {
-  for_each       = toset(var.availability_zones)
-  allocation_id  = aws_eip.nat[each.key].id
-  subnet_id      = aws_subnet.public[each.key].id # Attach NAT Gateway to public subnets
+  allocation_id = aws_eip.nat.id
+  subnet_id     = aws_subnet.public.id # Attach NAT Gateway to public subnet
 
-  tags = merge(var.common_tags, { Name = "nat-gateway-${each.key}" })
+  tags = merge(var.common_tags, { Name = "nat-gateway" })
 }
 
-# Elastic IP for NAT Gateways
+# Elastic IP for NAT Gateway
 resource "aws_eip" "nat" {
-  for_each = toset(var.availability_zones)
-
-  tags = merge(var.common_tags, { Name = "eip-for-nat-${each.key}" })
+  tags = merge(var.common_tags, { Name = "eip-for-nat" })
 }
 
 #############################################
-# Public Route Table for Public Subnets
+# Public Route Table for Public Subnet
 #############################################
 resource "aws_route_table" "public" {
   vpc_id = data.aws_vpc.default.id
 
   route {
     cidr_block = "0.0.0.0/0"
-    gateway_id = data.aws_internet_gateway.default.id # Use default Internet Gateway
+    gateway_id = data.aws_internet_gateway.default.id
   }
 
   tags = merge(var.common_tags, { Name = "public-rt", Type = "Public" })
 }
 
-# Associate Public Subnets with Public Route Table
+# Associate Public Subnet with Public Route Table
 resource "aws_route_table_association" "public" {
-  for_each       = toset(var.availability_zones)
-  subnet_id      = aws_subnet.public[each.key].id
+  subnet_id      = aws_subnet.public.id
   route_table_id = aws_route_table.public.id
 }
 
 #############################################
-# Private Route Table for Private Subnets
+# Private Route Table for Private Subnet
 #############################################
 resource "aws_route_table" "private" {
-  for_each = toset(var.availability_zones)
-  vpc_id   = data.aws_vpc.default.id
+  vpc_id = data.aws_vpc.default.id
 
   route {
     cidr_block = "0.0.0.0/0"
-    gateway_id = aws_nat_gateway.nat[each.key].id # Route through NAT Gateway
+    gateway_id = aws_nat_gateway.nat.id # Route through NAT Gateway
   }
 
-  tags = merge(var.common_tags, { Name = "private-rt-${each.key}", Type = "Private" })
+  tags = merge(var.common_tags, { Name = "private-rt", Type = "Private" })
 }
 
-# Associate Private Subnets with Private Route Table
+# Associate Private Subnet with Private Route Table
 resource "aws_route_table_association" "private" {
-  for_each       = toset(var.availability_zones)
-  subnet_id      = aws_subnet.private[each.key].id
-  route_table_id = aws_route_table.private[each.key].id
+  subnet_id      = aws_subnet.private.id
+  route_table_id = aws_route_table.private.id
 }

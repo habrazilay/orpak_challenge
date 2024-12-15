@@ -15,11 +15,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    # Checkout the repository
+    # Step 1: Checkout the repository
     - name: Checkout Code
       uses: actions/checkout@v3
 
-    # Configure AWS Credentials
+    # Step 2: Configure AWS Credentials
     - name: Configure AWS Credentials
       uses: aws-actions/configure-aws-credentials@v2
       with:
@@ -27,31 +27,43 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: ${{ vars.AWS_REGION }}
 
-    # Setup Terraform
+    # Step 3: Setup Terraform
     - name: Setup Terraform
       uses: hashicorp/setup-terraform@v2
       with:
         terraform_wrapper: false
 
-    # Initialize Terraform
+    # Step 4: Initialize Terraform
     - name: Terraform Init
       working-directory: terraform_files
       run: terraform init
 
-    # Validate Terraform Configuration
-    - name: Terraform Validate
+    # Step 5: Plan and Apply IAM Roles
+    - name: Terraform Plan IAM
       working-directory: terraform_files
-      run: terraform validate
+      run: terraform plan -target=module.iam -out=iam-plan
 
-    # Terraform Plan
-    - name: Terraform Plan
+    - name: Terraform Apply IAM
       working-directory: terraform_files
-      run: terraform plan -out=tfplan
+      run: terraform apply -auto-approve iam-plan
 
-    # Terraform Apply
-    - name: Terraform Apply
+    # Step 6: Plan and Apply Networks
+    - name: Terraform Plan Networks
       working-directory: terraform_files
-      run: terraform apply -auto-approve tfplan
+      run: terraform plan -target=module.networks -out=networks-plan
+
+    - name: Terraform Apply Networks
+      working-directory: terraform_files
+      run: terraform apply -auto-approve networks-plan
+
+    # Step 7: Plan and Apply Security Groups
+    - name: Terraform Plan Security Groups
+      working-directory: terraform_files
+      run: terraform plan -target=module.security_groups -out=security-groups-plan
+
+    - name: Terraform Apply Security Groups
+      working-directory: terraform_files
+      run: terraform apply -auto-approve security-groups-plan
       
   # application:
   #   name: Application Deployment

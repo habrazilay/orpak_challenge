@@ -65,8 +65,8 @@ The instructions provided are designed to allow you to run and test the project 
 Clone this repository to your local machine:
 
 ```bash
-git clone https://github.com/your-repo-name.git
-cd your-repo-name
+git clone https://github.com/habrazilay/orpak_challenge.git
+cd orpak_challenge
 ```
 
 ---
@@ -110,7 +110,7 @@ trusted_ip = "203.0.113.0/32"
 Store the database credentials securely as Kubernetes Secrets:
 
 ```bash
-kubectl create secret generic postgres-secrets   --from-literal=DB_NAME=mydatabase   --from-literal=DB_USER=myuser   --from-literal=DB_PASSWORD=mypassword   --from-literal=DB_HOST=my-database-host   --from-literal=DB_PORT=5432
+kubectl create secret generic postgres-secrets   --from-literal=DB_NAME=${DB_NAME}   --from-literal=DB_USER=${DB_USER}   --from-literal=DB_PASSWORD=${DB_PASSWORD}   --from-literal=DB_HOST=${DB_HOST}   --from-literal=DB_PORT=${DB_PORT}
 ```
 
 ---
@@ -206,13 +206,28 @@ kubectl apply -f kubernetes/deployments.yaml
 │   │   │   ├── main.tf          # VPC, subnets, NAT, route tables
 │   │   │   ├── variables.tf     # Module variables
 │   │   │   ├── outputs.tf       # Module outputs
+│   │   ├── security_groups/
+│   │   │   ├── main.tf          # Security groups for ALB, Nginx
+│   │   │   ├── variables.tf     # Module variables
+│   │   │   ├── outputs.tf       # Module outputs
+│   │   └── eks/
+│   │       ├── main.tf          # EKS cluster, node groups, IAM roles
+│   │       ├── variables.tf     # Module variables
+│   │       ├── outputs.tf       # Module outputs
 │   ├── main.tf                  # Root module for Terraform
 │   ├── variables.tf             # Root variables
 │   ├── outputs.tf               # Outputs for root module
 ├── kubernetes/                 # Kubernetes manifests
 │   ├── deployment.yaml          # Kubernetes deployment manifest
 │   ├── service.yaml             # Kubernetes service manifest
+├── app/                        # Python Flask application
+│   ├── app.py                   # Flask application code
+│   ├── requirements.txt         # Python dependencies
+│   ├── Dockerfile               # Multi-stage Docker build for Flask app
+├── nginx/                      # Nginx configuration
+│   ├── nginx.conf               # Configuration for Nginx
 ├── README.md                   # Project documentation
+├── .gitignore                  # Git ignore file
 ```
 
 ---

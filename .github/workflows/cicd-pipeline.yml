@@ -38,12 +38,12 @@ jobs:
       run: terraform validate
 
     # Terraform Plan
-    # - name: Terraform Plan
-    #   run: terraform plan
+    - name: Terraform Plan
+      run: terraform plan
 
     # Terraform Apply
-    # - name: Terraform Apply
-    #   run: terraform apply -auto-approve
+    - name: Terraform Apply
+      run: terraform apply -auto-approve
 
   application:
     name: Application Deployment
@@ -62,7 +62,7 @@ jobs:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: ${{ env.AWS_REGION }}
-      continue-on-error: true # For simulation
+      # # continue-on-error: true # For simulation
 
     # Setup kubectl
     - name: Setup kubectl
@@ -97,7 +97,7 @@ jobs:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: ${{ env.AWS_REGION }}
-      continue-on-error: true # For simulation
+      # continue-on-error: true # For simulation
 
     # Setup kubectl
     - name: Setup kubectl
@@ -148,7 +148,7 @@ jobs:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: ${{ env.AWS_REGION }}
-      continue-on-error: true # For simulation
+      # continue-on-error: true # For simulation
 
     # Setup kubectl
     - name: Setup kubectl

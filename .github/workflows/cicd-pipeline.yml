@@ -15,11 +15,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    # Checkout the repository
+    # Step 1: Checkout the repository
     - name: Checkout Code
       uses: actions/checkout@v3
 
-    # Configure AWS Credentials
+    # Step 2: Configure AWS Credentials
     - name: Configure AWS Credentials
       uses: aws-actions/configure-aws-credentials@v2
       with:
@@ -27,7 +27,18 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: ${{ vars.AWS_REGION }}
 
-    # Step 1: Plan and Apply IAM Roles
+    # Step 3: Setup Terraform
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v2
+      with:
+        terraform_wrapper: false
+
+    # Step 4: Initialize Terraform
+    - name: Terraform Init
+      working-directory: terraform_files
+      run: terraform init
+
+    # Step 5: Plan and Apply IAM Roles
     - name: Terraform Plan IAM
       working-directory: terraform_files
       run: terraform plan -target=module.iam -out=iam-plan
@@ -36,7 +47,7 @@ jobs:
       working-directory: terraform_files
       run: terraform apply -auto-approve iam-plan
 
-    # Step 2: Plan and Apply Networks
+    # Step 6: Plan and Apply Networks
     - name: Terraform Plan Networks
       working-directory: terraform_files
       run: terraform plan -target=module.networks -out=networks-plan
@@ -45,7 +56,7 @@ jobs:
       working-directory: terraform_files
       run: terraform apply -auto-approve networks-plan
 
-    # Step 3: Plan and Apply Security Groups
+    # Step 7: Plan and Apply Security Groups
     - name: Terraform Plan Security Groups
       working-directory: terraform_files
       run: terraform plan -target=module.security_groups -out=security-groups-plan

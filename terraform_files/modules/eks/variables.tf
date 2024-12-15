@@ -14,10 +14,9 @@ variable "vpc_id" {
 }
 
 # FIX: Add a variable for control_plane_subnet_ids as it is required for coalescelist
-variable "control_plane_subnet_ids" { 
-  description = "Subnet IDs for the EKS control plane"
+variable "subnet_ids" {
+  description = "List of subnet IDs for the EKS control plane"
   type        = list(string)
-  default     = [] 
 }
 
 variable "private_subnets" {

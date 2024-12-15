@@ -1,7 +1,7 @@
 # modules/security_groups/outputs.tf
-variable "vpc_id" {
-  description = "VPC ID where the security groups will be created"
-  type        = string
+output "web_and_alb_sg_id" {
+  description = "Security Group ID for Webserver and ALB"
+  value       = aws_security_group.alb.id
 }
 
 

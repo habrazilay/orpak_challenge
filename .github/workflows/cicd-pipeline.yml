@@ -9,10 +9,6 @@ on:
     branches:
       - main
 
-env:
-  AWS_REGION: "us-east-1"
-  EKS_CLUSTER_NAME: "my-eks-cluster"
-
 jobs:
   terraform:
     name: Terraform Workflow
@@ -29,6 +25,19 @@ jobs:
       with:
         terraform_wrapper: false
 
+    # Configure AWS Credentials
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ vars.AWS_REGION }}
+      # # continue-on-error: true # For simulation
+
+    # Verify AWS Credentials
+    - name: Verify AWS Credentials
+      run: aws sts get-caller-identity
+
     # Initialize Terraform
     - name: Terraform Init
       run: terraform init
@@ -37,14 +46,14 @@ jobs:
     - name: Terraform Validate
       run: terraform validate
 
-    # Terraform Plan
-    # - name: Terraform Plan
-    #   run: terraform plan
+    # Terraform Plan with logs
+    - name: Terraform Plan
+      run: terraform plan -out=tfplan && terraform show -json tfplan > plan.json
 
     # Terraform Apply
-    # - name: Terraform Apply
-    #   run: terraform apply -auto-approve
-
+    - name: Terraform Apply
+      run: terraform apply -auto-approve
+      
   application:
     name: Application Deployment
     runs-on: ubuntu-latest
@@ -55,123 +64,126 @@ jobs:
     - name: Checkout Code
       uses: actions/checkout@v3
 
-    # Configure AWS Credentials
-    - name: Configure AWS Credentials
-      uses: aws-actions/configure-aws-credentials@v2
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: ${{ env.AWS_REGION }}
+    # # Configure AWS Credentials
+    # - name: Configure AWS Credentials
+    #   uses: aws-actions/configure-aws-credentials@v2
+    #   with:
+    #     aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+    #     aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+    #     aws-region: ${{ env.AWS_REGION }}
+    #   # # continue-on-error: true # For simulation
 
-    # Setup kubectl
-    - name: Setup kubectl
-      uses: azure/setup-kubectl@v3
-      with:
-        version: 'v1.27.3'
+  #   # Setup kubectl
+  #   - name: Setup kubectl
+  #     uses: azure/setup-kubectl@v3
+  #     with:
+  #       version: 'v1.27.3'
 
-    # Authenticate with EKS cluster
-    - name: Update kubeconfig
-      run: aws eks update-kubeconfig --region ${{ env.AWS_REGION }} --name ${{ env.EKS_CLUSTER_NAME }}
+  #   # Authenticate with EKS cluster
+  #   - name: Update kubeconfig
+  #     run: aws eks update-kubeconfig --region ${{ env.AWS_REGION }} --name ${{ env.EKS_CLUSTER_NAME }}
 
-    # Deploy to Kubernetes
-    - name: Deploy Application
-      run: |
-        kubectl apply -f kubernetes/deployment.yaml
-        kubectl apply -f kubernetes/service.yaml
+  #   # Deploy to Kubernetes
+  #   - name: Deploy Application
+  #     run: |
+  #       kubectl apply -f kubernetes/deployment.yaml
+  #       kubectl apply -f kubernetes/service.yaml
 
-  monitoring:
-    name: Deploy Monitoring Stack
-    runs-on: ubuntu-latest
-    needs: terraform
+  # monitoring:
+  #   name: Deploy Monitoring Stack
+  #   runs-on: ubuntu-latest
+  #   needs: terraform
 
-    steps:
-    # Checkout the repository
-    - name: Checkout Code
-      uses: actions/checkout@v3
+  #   steps:
+  #   # Checkout the repository
+  #   - name: Checkout Code
+  #     uses: actions/checkout@v3
 
-    # Configure AWS Credentials
-    - name: Configure AWS Credentials
-      uses: aws-actions/configure-aws-credentials@v2
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: ${{ env.AWS_REGION }}
+  #   # Configure AWS Credentials
+  #   - name: Configure AWS Credentials
+  #     uses: aws-actions/configure-aws-credentials@v2
+  #     with:
+  #       aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  #       aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  #       aws-region: ${{ env.AWS_REGION }}
+  #     # continue-on-error: true # For simulation
 
-    # Setup kubectl
-    - name: Setup kubectl
-      uses: azure/setup-kubectl@v3
-      with:
-        version: 'v1.27.3'
+  #   # Setup kubectl
+  #   - name: Setup kubectl
+  #     uses: azure/setup-kubectl@v3
+  #     with:
+  #       version: 'v1.27.3'
 
-    # Authenticate with EKS cluster
-    - name: Update kubeconfig
-      run: aws eks update-kubeconfig --region ${{ env.AWS_REGION }} --name ${{ env.EKS_CLUSTER_NAME }}
+  #   # Authenticate with EKS cluster
+  #   - name: Update kubeconfig
+  #     run: aws eks update-kubeconfig --region ${{ env.AWS_REGION }} --name ${{ env.EKS_CLUSTER_NAME }}
 
-    # Deploy Metrics Server
-    - name: Deploy Metrics Server
-      run: |
-        kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
+  #   # Deploy Metrics Server
+  #   - name: Deploy Metrics Server
+  #     run: |
+  #       kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
 
-    # Deploy Prometheus
-    - name: Deploy Prometheus
-      run: |
-        helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
-        helm repo update
-        helm install prometheus prometheus-community/prometheus --namespace monitoring --create-namespace
+  #   # Deploy Prometheus
+  #   - name: Deploy Prometheus
+  #     run: |
+  #       helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+  #       helm repo update
+  #       helm install prometheus prometheus-community/prometheus --namespace monitoring --create-namespace
 
-    # Deploy Node Exporter
-    - name: Deploy Node Exporter
-      run: |
-        helm install node-exporter prometheus-community/prometheus-node-exporter --namespace monitoring
+  #   # Deploy Node Exporter
+  #   - name: Deploy Node Exporter
+  #     run: |
+  #       helm install node-exporter prometheus-community/prometheus-node-exporter --namespace monitoring
 
-    # Deploy kube-state-metrics
-    - name: Deploy kube-state-metrics
-      run: |
-        helm install kube-state-metrics prometheus-community/kube-state-metrics --namespace monitoring
+  #   # Deploy kube-state-metrics
+  #   - name: Deploy kube-state-metrics
+  #     run: |
+  #       helm install kube-state-metrics prometheus-community/kube-state-metrics --namespace monitoring
 
-  logging:
-    name: Deploy ELK Stack for Log Aggregation
-    runs-on: ubuntu-latest
-    needs: terraform
+  # logging:
+  #   name: Deploy ELK Stack for Log Aggregation
+  #   runs-on: ubuntu-latest
+  #   needs: terraform
 
-    steps:
-    # Checkout the repository
-    - name: Checkout Code
-      uses: actions/checkout@v3
+  #   steps:
+  #   # Checkout the repository
+  #   - name: Checkout Code
+  #     uses: actions/checkout@v3
 
-    # Configure AWS Credentials
-    - name: Configure AWS Credentials
-      uses: aws-actions/configure-aws-credentials@v2
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: ${{ env.AWS_REGION }}
+  #   # Configure AWS Credentials
+  #   - name: Configure AWS Credentials
+  #     uses: aws-actions/configure-aws-credentials@v2
+  #     with:
+  #       aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  #       aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  #       aws-region: ${{ env.AWS_REGION }}
+  #     # continue-on-error: true # For simulation
 
-    # Setup kubectl
-    - name: Setup kubectl
-      uses: azure/setup-kubectl@v3
-      with:
-        version: 'v1.27.3'
+  #   # Setup kubectl
+  #   - name: Setup kubectl
+  #     uses: azure/setup-kubectl@v3
+  #     with:
+  #       version: 'v1.27.3'
 
-    # Authenticate with EKS cluster
-    - name: Update kubeconfig
-      run: aws eks update-kubeconfig --region ${{ env.AWS_REGION }} --name ${{ env.EKS_CLUSTER_NAME }}
+  #   # Authenticate with EKS cluster
+  #   - name: Update kubeconfig
+  #     run: aws eks update-kubeconfig --region ${{ env.AWS_REGION }} --name ${{ env.EKS_CLUSTER_NAME }}
 
-    # Deploy ElasticSearch
-    - name: Deploy ElasticSearch
-      run: |
-        helm repo add elastic https://helm.elastic.co
-        helm repo update
-        helm install elasticsearch elastic/elasticsearch --namespace logging --create-namespace
+  #   # Deploy ElasticSearch
+  #   - name: Deploy ElasticSearch
+  #     run: |
+  #       helm repo add elastic https://helm.elastic.co
+  #       helm repo update
+  #       helm install elasticsearch elastic/elasticsearch --namespace logging --create-namespace
 
-    # Deploy Kibana
-    - name: Deploy Kibana
-      run: |
-        helm install kibana elastic/kibana --namespace logging
+  #   # Deploy Kibana
+  #   - name: Deploy Kibana
+  #     run: |
+  #       helm install kibana elastic/kibana --namespace logging
 
-    # Deploy Fluentd
-    - name: Deploy Fluentd
-      run: |
-        helm repo add fluent https://fluent.github.io/helm-charts
-        helm repo update
-        helm install fluentd fluent/fluentd --namespace logging
+  #   # Deploy Fluentd
+  #   - name: Deploy Fluentd
+  #     run: |
+  #       helm repo add fluent https://fluent.github.io/helm-charts
+  #       helm repo update
+  #       helm install fluentd fluent/fluentd --namespace logging

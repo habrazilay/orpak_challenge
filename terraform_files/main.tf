@@ -30,9 +30,11 @@ module "eks" {
   node_group_min     = var.node_group_min
   node_group_instance_types = var.node_group_instance_types
   alb_sg_ids         = [module.security_groups.alb_sg_id]
-  additional_iam_role_arn   = var.additional_iam_role_arn
-  common_tags = var.common_tags
+  additional_iam_role_arn   = module.iam.eks_node_group_role_arn # Use manual or Terraform-managed Node Group Role
+  cluster_role_arn   = module.iam.eks_cluster_role_arn # Pass the Cluster Role ARN
+  common_tags        = var.common_tags
 }
+
 
 
 # Instantiate the networks module

@@ -33,8 +33,13 @@ jobs:
       with:
         terraform_wrapper: false
 
-    # Step 4: Terraform destroy
+    # Step 4: Initiate Terraform destroy
     - name: Terraform Init
+      working-directory: terraform_files
+      run: terraform init
+
+    # Step 5: Terraform destroy
+    - name: Terraform destroy
       working-directory: terraform_files
       run: terraform destroy -auto-approve
 

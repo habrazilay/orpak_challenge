@@ -11,7 +11,7 @@ data "aws_vpc" "default" {
 #############################################
 resource "aws_subnet" "public" {
   vpc_id                  = data.aws_vpc.default.id
-  cidr_block              = "172.31.0.0/20" # Adjusted to fit within Default VPC
+  cidr_block              = "172.31.192.0/20"
   availability_zone       = var.availability_zones[0]
   map_public_ip_on_launch = true
 
@@ -23,8 +23,8 @@ resource "aws_subnet" "public" {
 #############################################
 resource "aws_subnet" "private" {
   vpc_id                  = data.aws_vpc.default.id
-  cidr_block              = "172.31.16.0/20" # Adjusted to fit within Default VPC
-  availability_zone       = var.availability_zones[0]
+  cidr_block              = "172.31.208.0/20"
+  availability_zone       = var.availability_zones[1]
   map_public_ip_on_launch = false
 
   tags = merge(var.common_tags, { Name = "private-subnet", Type = "Private" })
@@ -62,7 +62,7 @@ resource "aws_route_table" "public" {
   vpc_id = data.aws_vpc.default.id
 
   route {
-    cidr_block = "10.0.0.0/24"
+    cidr_block = "0.0.0.0/0"
     gateway_id = data.aws_internet_gateway.default.id
   }
 

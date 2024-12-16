@@ -1,13 +1,13 @@
 name: Terraform
 
 on:
-  # workflow_dispatch: # Enables manual trigger via GitHub Actions UI
-  push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
+  workflow_dispatch: # Enables manual trigger via GitHub Actions UI
+  # push:
+  #   branches:
+  #     - main
+  # pull_request:
+  #   branches:
+  #     - main
 
 jobs:
   terraform:
@@ -33,10 +33,10 @@ jobs:
       with:
         terraform_wrapper: false
 
-    # Step 4: Initialize Terraform
+    # Step 4: Terraform destroy
     - name: Terraform Init
       working-directory: terraform_files
-      run: terraform init
+      run: terraform destroy -auto-approve
 
     # # Step 5: Plan and Apply IAM Roles
     # - name: Terraform Plan IAM

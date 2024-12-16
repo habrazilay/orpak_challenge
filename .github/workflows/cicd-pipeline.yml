@@ -1,42 +1,47 @@
-name: Terraform
+name: CI/CD Pipeline
 
 on:
-  # workflow_dispatch: # Enables manual trigger via GitHub Actions UI
-  push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
+  workflow_dispatch: # Enables manual trigger via GitHub Actions UI
+  # push:
+  #   branches:
+  #     - main
+  # pull_request:
+  #   branches:
+  #     - main
 
-jobs:
-  terraform:
-    name: Terraform Workflow
-    runs-on: ubuntu-latest
+# jobs:
+#   terraform:
+#     name: Terraform Workflow
+#     runs-on: ubuntu-latest
 
-    steps:
-    # Step 1: Checkout the repository
-    - name: Checkout Code
-      uses: actions/checkout@v3
+#     steps:
+#     # Step 1: Checkout the repository
+#     - name: Checkout Code
+#       uses: actions/checkout@v3
 
-    # Step 2: Configure AWS Credentials
-    - name: Configure AWS Credentials
-      uses: aws-actions/configure-aws-credentials@v2
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: ${{ vars.AWS_REGION }}
+#     # Step 2: Configure AWS Credentials
+#     - name: Configure AWS Credentials
+#       uses: aws-actions/configure-aws-credentials@v2
+#       with:
+#         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+#         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+#         aws-region: ${{ vars.AWS_REGION }}
 
-    # Step 3: Setup Terraform
-    - name: Setup Terraform
-      uses: hashicorp/setup-terraform@v2
-      with:
-        terraform_wrapper: false
+#     # Step 3: Setup Terraform
+#     - name: Setup Terraform
+#       uses: hashicorp/setup-terraform@v2
+#       with:
+#         terraform_wrapper: false
 
-    # Step 4: Initialize Terraform
-    - name: Terraform Init
-      working-directory: terraform_files
-      run: terraform init
+#     # Step 4: Initiate Terraform destroy
+#     - name: Terraform Init
+#       working-directory: terraform_files
+#       run: terraform init
+
+#     # Step 5: Terraform destroy
+#     - name: Terraform destroy
+#       working-directory: terraform_files
+#       run: terraform destroy -auto-approve
 
     # # Step 5: Plan and Apply IAM Roles
     # - name: Terraform Plan IAM
@@ -48,22 +53,22 @@ jobs:
     #   run: terraform apply -auto-approve iam-plan
 
     # Step 6: Plan and Apply Networks
-    - name: Terraform Plan Networks
-      working-directory: terraform_files
-      run: terraform plan -target=module.networks -out=networks-plan
+    # - name: Terraform Plan Networks
+    #   working-directory: terraform_files
+    #   run: terraform plan -target=module.networks -out=networks-plan
 
-    - name: Terraform Apply Networks
-      working-directory: terraform_files
-      run: terraform apply -auto-approve networks-plan
+    # - name: Terraform Apply Networks
+    #   working-directory: terraform_files
+    #   run: terraform apply -auto-approve networks-plan
 
-    # Step 7: Plan and Apply Security Groups
-    - name: Terraform Plan Security Groups
-      working-directory: terraform_files
-      run: terraform plan -target=module.security_groups -out=security-groups-plan
+    # # Step 7: Plan and Apply Security Groups
+    # - name: Terraform Plan Security Groups
+    #   working-directory: terraform_files
+    #   run: terraform plan -target=module.security_groups -out=security-groups-plan
 
-    - name: Terraform Apply Security Groups
-      working-directory: terraform_files
-      run: terraform apply -auto-approve security-groups-plan
+    # - name: Terraform Apply Security Groups
+    #   working-directory: terraform_files
+    #   run: terraform apply -auto-approve security-groups-plan
       
   # application:
   #   name: Application Deployment

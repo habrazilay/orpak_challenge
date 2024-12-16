@@ -1,3 +1,4 @@
+# terraform_files/modules/eks/variables.tf
 variable "cluster_name" {
   description = "Name of the EKS cluster"
   type        = string
@@ -13,22 +14,22 @@ variable "vpc_id" {
   type        = string
 }
 
-# FIX: Add a variable for control_plane_subnet_ids as it is required for coalescelist
+# FIX: Add a variable for control_plane_subnet_ids as it is required for coalescelist and default to an empty list if not provided
 variable "subnet_ids" {
-  description = "List of subnet IDs for the EKS control plane"
+  description = "Subnet IDs for the EKS cluster"
   type        = list(string)
+  default     = []
 }
+
 
 variable "private_subnets" {
   description = "List of private subnet IDs for the EKS cluster"
   type        = list(string)
 }
 
-# FIX: Add a variable for public_subnets as optional input (if needed for ALB or other resources)
 variable "public_subnets" {
   description = "List of public subnet IDs for the EKS cluster"
   type        = list(string)
-  default     = [] 
 }
 
 variable "node_group_desired" {

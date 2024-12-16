@@ -4,15 +4,27 @@ output "vpc_id" {
   value       = module.networks.vpc_id
 }
 
-output "public_subnet" {
+output "public_subnets" {
   description = "The ID of the public subnet"
-  value       = module.networks.public_subnet
+  value       = module.networks.public_subnets
 }
 
-output "private_subnet" {
+output "private_subnets" {
   description = "The ID of the private subnet"
-  value       = module.networks.private_subnet
+  value       = module.networks.private_subnets
 }
+
+output "eks_node_group_role" {
+  description = "IAM role ARN for the EKS node group"
+  value       = module.iam.node_group_iam_role
+}
+
+output "kubeconfig" {
+  description = "The kubeconfig file for accessing the EKS cluster"
+  value       = module.eks.kubeconfig
+}
+
+
 
 # Uncomment and update this output if needed later for EKS node group roles
 # output "node_group_iam_role" {

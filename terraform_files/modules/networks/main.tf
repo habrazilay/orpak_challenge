@@ -1,6 +1,5 @@
-# terraform_files/modules/networks/main.tf
 #############################################
-# Fetch Default VPC
+# VPC
 #############################################
 resource "aws_vpc" "main" {
   cidr_block           = var.vpc_cidr_block
@@ -10,92 +9,89 @@ resource "aws_vpc" "main" {
   tags = merge(var.common_tags, { Name = "main-vpc" })
 }
 
+#############################################
+# Public Resources
+#############################################
 
-#############################################
-# Create a Single Public Subnet in Default VPC
-#############################################
+# Create Public Subnets
 resource "aws_subnet" "public" {
-  vpc_id                  = data.aws_vpc.default.id
-  cidr_block              = var.public_subnet_cidr
-  availability_zone       = var.availability_zones[0]
+  count                 = length(var.availability_zones)
+  vpc_id                = aws_vpc.main.id
+  cidr_block            = var.public_subnet_cidr
+  availability_zone     = var.availability_zones[count.index]
   map_public_ip_on_launch = true
 
-  tags = merge(var.common_tags, { Name = "public-subnet", Type = "Public" })
+  tags = merge(var.common_tags, { Name = "public-subnet-${count.index + 1}" })
 }
 
-#############################################
-# Create a Single Private Subnet in Default VPC
-#############################################
-resource "aws_subnet" "private" {
-  vpc_id                  = data.aws_vpc.default.id
-  cidr_block              = var.private_subnet_cidr
-  availability_zone       = var.availability_zones[1]
-  map_public_ip_on_launch = false
+# Internet Gateway
+resource "aws_internet_gateway" "main" {
+  vpc_id = aws_vpc.main.id
 
-  tags = merge(var.common_tags, { Name = "private-subnet", Type = "Private" })
+  tags = merge(var.common_tags, { Name = "main-igw" })
 }
 
-#############################################
-# Use Existing Internet Gateway from Default VPC
-#############################################
-data "aws_internet_gateway" "default" {
-  filter {
-    name   = "attachment.vpc-id"
-    values = [data.aws_vpc.default.id]
-  }
-}
-
-#############################################
-# NAT Gateway for Private Subnet
-#############################################
-resource "aws_nat_gateway" "nat" {
-  allocation_id = aws_eip.nat.id
-  subnet_id     = aws_subnet.public.id # Attach NAT Gateway to public subnet
-
-  tags = merge(var.common_tags, { Name = "nat-gateway" })
-}
-
-# Elastic IP for NAT Gateway
-resource "aws_eip" "nat" {
-  tags = merge(var.common_tags, { Name = "eip-for-nat" })
-}
-
-#############################################
-# Public Route Table for Public Subnet
-#############################################
+# Public Route Table
 resource "aws_route_table" "public" {
-  vpc_id = data.aws_vpc.default.id
+  vpc_id = aws_vpc.main.id
 
   route {
     cidr_block = "0.0.0.0/0"
-    gateway_id = data.aws_internet_gateway.default.id
+    gateway_id = aws_internet_gateway.main.id
   }
 
   tags = merge(var.common_tags, { Name = "public-rt", Type = "Public" })
 }
 
-# Associate Public Subnet with Public Route Table
+# Associate Public Subnets with Public Route Table
 resource "aws_route_table_association" "public" {
-  subnet_id      = aws_subnet.public.id
+  count          = length(aws_subnet.public)
+  subnet_id      = aws_subnet.public[count.index].id
   route_table_id = aws_route_table.public.id
 }
 
 #############################################
-# Private Route Table for Private Subnet
+# Private Resources
 #############################################
+
+# Create Private Subnets
+resource "aws_subnet" "private" {
+  count                 = length(var.availability_zones)
+  vpc_id                = aws_vpc.main.id
+  cidr_block            = var.private_subnet_cidr
+  availability_zone     = var.availability_zones[count.index]
+  map_public_ip_on_launch = false
+
+  tags = merge(var.common_tags, { Name = "private-subnet-${count.index + 1}" })
+}
+
+# NAT Gateway
+resource "aws_eip" "nat" {
+  tags = merge(var.common_tags, { Name = "eip-for-nat" })
+}
+
+resource "aws_nat_gateway" "nat" {
+  allocation_id = aws_eip.nat.id
+  subnet_id     = aws_subnet.public[0].id # Attach NAT Gateway to the first public subnet
+
+  tags = merge(var.common_tags, { Name = "nat-gateway" })
+}
+
+# Private Route Table
 resource "aws_route_table" "private" {
-  vpc_id = data.aws_vpc.default.id
+  vpc_id = aws_vpc.main.id
 
   route {
     cidr_block = "0.0.0.0/0"
-    gateway_id = aws_nat_gateway.nat.id # Route through NAT Gateway
+    gateway_id = aws_nat_gateway.nat.id
   }
 
   tags = merge(var.common_tags, { Name = "private-rt", Type = "Private" })
 }
 
-# Associate Private Subnet with Private Route Table
+# Associate Private Subnets with Private Route Table
 resource "aws_route_table_association" "private" {
-  subnet_id      = aws_subnet.private.id
+  count          = length(aws_subnet.private)
+  subnet_id      = aws_subnet.private[count.index].id
   route_table_id = aws_route_table.private.id
 }

@@ -15,12 +15,12 @@ output "cluster_id" {
 #   value       = module.eks.kubeconfig
 # }
 
-output "kubeconfig" {
-  description = "The kubeconfig details for the EKS cluster"
-  value = {
-    api_server_endpoint    = module.eks.cluster_endpoint
-    cluster_ca_certificate = module.eks.cluster_certificate_authority_data
-    cluster_name           = module.eks.cluster_name
-  }
-}
+# output "kubeconfig" {
+#   description = "The kubeconfig details for the EKS cluster"
+#   value = {
+#     api_server_endpoint    = module.eks.cluster_endpoint
+#     cluster_ca_certificate = module.eks.cluster_certificate_authority_data
+#     cluster_name           = module.eks.cluster_name
+#   }
+# }
 

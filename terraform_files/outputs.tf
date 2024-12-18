@@ -14,15 +14,15 @@ output "private_subnets" {
   value       = module.networks.private_subnets
 }
 
-output "eks_node_group_role" {
-  description = "IAM role ARN for the EKS node group"
-  value       = module.iam.node_group_iam_role
-}
+# output "eks_node_group_role" {
+#   description = "IAM role ARN for the EKS node group"
+#   value       = module.iam.node_group_iam_role
+# }
 
-output "kubeconfig" {
-  description = "The kubeconfig file for accessing the EKS cluster"
-  value       = module.eks.kubeconfig
-}
+# output "kubeconfig" {
+#   description = "The kubeconfig file for accessing the EKS cluster"
+#   value       = module.eks.kubeconfig
+# }
 
 
 

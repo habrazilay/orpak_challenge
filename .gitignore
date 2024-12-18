@@ -1,3 +1,10 @@
+# Ignore old files and backups
+*.old
+*.backup
+
+# Ignore cleanup scripts if they are not relevant to the repository
+cleanup_resources.sh
+
 # Ignore Terraform directories
 .terraform/
 terraform_files/.terraform/

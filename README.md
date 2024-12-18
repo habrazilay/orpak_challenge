@@ -359,37 +359,45 @@ kubectl apply -f kubernetes/deployments.yaml
 
 ```plaintext
 .
-├── .github/                    # GitHub Actions workflows
-│   └── workflows/
-│       └── cicd-pipeline.yml   # CI/CD pipeline configuration
+├── README.md                   # Project documentation
+├── .gitignore                  # Git ignore file
+├── app/                        # Python Flask application
+│   ├── app.py                   # Flask application code
+│   ├── Dockerfile               # Multi-stage Docker build for Flask app
+│   ├── requirements.txt         # Python dependencies
+├── kubernetes/                 # Kubernetes manifests
+│   ├── deployments.yaml         # Kubernetes deployment manifest
+│   ├── hpa.yaml                 # Horizontal Pod Autoscaler manifest
+│   ├── services.yaml            # Kubernetes service manifest
+├── nginx/                      # Nginx configuration
+│   ├── Dockerfile               # Dockerfile for Nginx
 ├── terraform_files/            # Terraform configuration files
-│   ├── modules/
-│   │   ├── networks/
-│   │   │   ├── main.tf          # VPC, subnets, NAT, route tables
-│   │   │   ├── variables.tf     # Module variables
-│   │   │   ├── outputs.tf       # Module outputs
-│   │   ├── security_groups/
-│   │   │   ├── main.tf          # Security groups for ALB, Nginx
-│   │   │   ├── variables.tf     # Module variables
-│   │   │   ├── outputs.tf       # Module outputs
-│   │   └── eks/
-│   │       ├── main.tf          # EKS cluster, node groups, IAM roles
-│   │       ├── variables.tf     # Module variables
-│   │       ├── outputs.tf       # Module outputs
+│   ├── backend.tf               # Backend configuration for Terraform state
 │   ├── main.tf                  # Root module for Terraform
 │   ├── variables.tf             # Root variables
 │   ├── outputs.tf               # Outputs for root module
-├── kubernetes/                 # Kubernetes manifests
-│   ├── deployment.yaml          # Kubernetes deployment manifest
-│   ├── service.yaml             # Kubernetes service manifest
-├── app/                        # Python Flask application
-│   ├── app.py                   # Flask application code
-│   ├── requirements.txt         # Python dependencies
-│   ├── Dockerfile               # Multi-stage Docker build for Flask app
-├── nginx/                      # Nginx configuration
-│   ├── nginx.conf               # Configuration for Nginx
-├── README.md                   # Project documentation
-├── .gitignore                  # Git ignore file
+│   ├── modules/                 # Modularized Terraform configuration
+│   │   ├── eks/
+│   │   │   ├── main.tf           # EKS cluster, node groups, IAM roles
+│   │   │   ├── variables.tf      # Module variables
+│   │   │   ├── outputs.tf        # Module outputs
+│   │   ├── iam/
+│   │   │   ├── main.tf           # IAM roles and policies
+│   │   │   ├── variables.tf      # Module variables
+│   │   │   ├── outputs.tf        # Module outputs
+│   │   ├── networks/
+│   │   │   ├── main.tf           # VPC, subnets, NAT, route tables
+│   │   │   ├── variables.tf      # Module variables
+│   │   │   ├── outputs.tf        # Module outputs
+│   │   ├── security_groups/
+│   │   │   ├── main.tf           # Security groups for ALB, Nginx
+│   │   │   ├── variables.tf      # Module variables
+│   │   │   ├── outputs.tf        # Module outputs
+│   │   ├── resources/
+│   │       ├── main.tf           # Additional resources (e.g., S3, DynamoDB, EC2)
+│   │       ├── variables.tf      # Module variables
+│   │       ├── outputs.tf        # Module outputs
+
 ```
 
 ---

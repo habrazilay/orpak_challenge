@@ -12,12 +12,16 @@ The instructions provided are designed to allow you to run and test the project 
 - VPC with public and private subnets
 - NAT Gateway and Internet Gateway for networking
 - Application Load Balancer (ALB) for traffic distribution
+- IAM Roles for EKS Cluster and Node Groups
 - EKS cluster with managed node groups
 - Multi-stage Docker build for Python app
 - PostgreSQL database access via Kubernetes Secrets
 - CI/CD pipeline for infrastructure provisioning and application deployment
 - Basic monitoring with Prometheus and Kubernetes Metrics Server
+- Horizontal Pod Autoscaler (HPA) for automatic pod scaling based on CPU or memory utilization
 - Log aggregation using ElasticSearch, Fluentd, and Kibana (ELK)
+- Optional: S3 Bucket for storing Terraform state
+- Optional: DynamoDB table for state locking to prevent multiple concurrent edits
 
 ---
 
@@ -71,9 +75,10 @@ cd orpak_challenge
 
 ---
 
+
 ### **Step 2: Configure AWS Credentials**
 
-Set up your AWS Access Key and Secret Key:
+Set up your AWS Access Key and Secret Access Key:
 
 ```bash
 aws configure
@@ -86,6 +91,163 @@ Provide your:
 - Default Region (e.g., `us-east-1`)
 
 ---
+
+### **Step 2.1: Create IAM Groups and Assign Permissions**
+
+#### **Create the `ci-cd-users` Group**
+
+1. Log in to the [AWS Management Console](https://aws.amazon.com/console/).
+2. Navigate to the IAM service and create a new group named `ci-cd-users`.
+3. Attach the following policies:
+   - `AmazonEC2FullAccess` (AWS managed)
+   - `AmazonEKSClusterPolicy` (AWS managed)
+   - `AmazonEKSWorkerNodePolicy` (AWS managed)
+   - `AmazonS3FullAccess` (AWS managed)
+
+4. Add a custom managed policy named `ci-cd-user-permissions` with the following JSON content:
+
+```json
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "iam:CreateRole",
+                "iam:AttachRolePolicy",
+                "iam:PutRolePolicy",
+                "iam:ListRoles",
+                "iam:GetRole",
+                "iam:PassRole",
+                "ec2:DescribeSubnets",
+                "ec2:DescribeVpcs",
+                "ec2:DescribeRouteTables",
+                "ec2:CreateSubnet",
+                "ec2:DeleteSubnet"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Effect": "Allow",
+            "Action": "iam:PassRole",
+            "Resource": [
+                "arn:aws:iam::503561459373:role/MyEKSClusterRole",
+                "arn:aws:iam::503561459373:role/MyEKSNodeGroupRole"
+            ]
+        }
+    ]
+}
+```
+
+#### **Create the `eks-admins` Group**
+
+1. In the IAM service, create a new group named `eks-admins`.
+2. Attach the following policies:
+   - `AmazonEC2FullAccess` (AWS managed)
+   - `AmazonEKSClusterPolicy` (AWS managed)
+   - `AmazonEKSServicePolicy` (AWS managed)
+   - `CloudWatchLogsFullAccess` (AWS managed)
+   - `IAMFullAccess` (AWS managed)
+
+3. Add a custom managed policy named `my-eks-cluster` with the following JSON content:
+
+```json
+{
+    "Statement": [
+        {
+            "Action": [
+                "ec2:RunInstances",
+                "ec2:CreateLaunchTemplate",
+                "ec2:CreateFleet"
+            ],
+            "Condition": {
+                "StringEquals": {
+                    "aws:RequestTag/eks:eks-cluster-name": "${aws:PrincipalTag/eks:eks-cluster-name}"
+                },
+                "StringLike": {
+                    "aws:RequestTag/eks:kubernetes-node-class-name": "*",
+                    "aws:RequestTag/eks:kubernetes-node-pool-name": "*"
+                }
+            },
+            "Effect": "Allow",
+            "Resource": "*",
+            "Sid": "Compute"
+        },
+        {
+            "Action": [
+                "ec2:CreateVolume",
+                "ec2:CreateSnapshot"
+            ],
+            "Condition": {
+                "StringEquals": {
+                    "aws:RequestTag/eks:eks-cluster-name": "${aws:PrincipalTag/eks:eks-cluster-name}"
+                }
+            },
+            "Effect": "Allow",
+            "Resource": [
+                "arn:aws:ec2:*:*:volume/*",
+                "arn:aws:ec2:*:*:snapshot/*"
+            ],
+            "Sid": "Storage"
+        },
+        {
+            "Action": "ec2:CreateNetworkInterface",
+            "Condition": {
+                "StringEquals": {
+                    "aws:RequestTag/eks:eks-cluster-name": "${aws:PrincipalTag/eks:eks-cluster-name}",
+                    "aws:RequestTag/eks:kubernetes-cni-node-name": "*"
+                }
+            },
+            "Effect": "Allow",
+            "Resource": "*",
+            "Sid": "Networking"
+        },
+        {
+            "Action": [
+                "elasticloadbalancing:CreateTargetGroup",
+                "elasticloadbalancing:CreateRule",
+                "elasticloadbalancing:CreateLoadBalancer",
+                "elasticloadbalancing:CreateListener",
+                "ec2:CreateSecurityGroup"
+            ],
+            "Condition": {
+                "StringEquals": {
+                    "aws:RequestTag/eks:eks-cluster-name": "${aws:PrincipalTag/eks:eks-cluster-name}"
+                }
+            },
+            "Effect": "Allow",
+            "Resource": "*",
+            "Sid": "LoadBalancer"
+        },
+        {
+            "Action": "shield:CreateProtection",
+            "Condition": {
+                "StringEquals": {
+                    "aws:RequestTag/eks:eks-cluster-name": "${aws:PrincipalTag/eks:eks-cluster-name}"
+                }
+            },
+            "Effect": "Allow",
+            "Resource": "*",
+            "Sid": "ShieldProtection"
+        },
+        {
+            "Action": "shield:TagResource",
+            "Condition": {
+                "StringEquals": {
+                    "aws:RequestTag/eks:eks-cluster-name": "${aws:PrincipalTag/eks:eks-cluster-name}"
+                }
+            },
+            "Effect": "Allow",
+            "Resource": "arn:aws:shield::*:protection/*",
+            "Sid": "ShieldTagResource"
+        }
+    ],
+    "Version": "2012-10-17"
+}
+```
+
+---
+
 
 ### **Step 3: Define Variables**
 

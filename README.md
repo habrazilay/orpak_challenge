@@ -249,21 +249,43 @@ Provide your:
 ---
 
 
+
 ### **Step 3: Define Variables**
 
-Update the `variables.tf` file in the root directory with your configurations:
+The global `variables.tf` file already contains all necessary variables for the Terraform configuration. You only need to modify the default values in the file according to your custom requirements. This approach ensures a centralized way of managing configurations.
 
-- **`cluster_name`**: Name of your EKS cluster.
-- **`aws_region`**: AWS region to deploy resources.
-- **`trusted_ip`**: Your IP address for SSH access.
+---
 
-Alternatively, create a `terraform.tfvars` file:
+#### **Variables to Update**
+1. **`cluster_name`**: Update this to reflect the desired name for your EKS cluster.
+   - Default: `"my-eks-cluster"`
+   - Replace with your cluster name.
 
-```hcl
-aws_region = "us-east-1"
-cluster_name = "my-eks-cluster"
-trusted_ip = "203.0.113.0/32"
-```
+2. **`aws_region`**: Specify the AWS region where resources will be deployed.
+   - Default: `"us-east-1"`
+   - Replace with your preferred region.
+
+3. **`trusted_ip`**: Update with the IP address for SSH access (if needed). However, **using AWS credentials is recommended instead of SSH**.
+   - Default: `"192.168.1.137/32"`
+   - Replace with your current IP address or remove if not using SSH.
+
+4. **`common_tags`**: These tags are applied to all resources for organization.
+   - Default:
+     ```hcl
+     default = {
+       Project     = "OrpakProject"
+       Environment = "simulation"
+     }
+     ```
+   - Update to match your project's name and environment.
+
+---
+
+#### **Best Practices**
+- Avoid hardcoding sensitive data like SSH keys or IPs in variables. Use AWS credentials for authentication and resource management.
+- Always customize the `common_tags` to reflect your organization's standards for identifying resources.
+
+By modifying these values, the Terraform configuration becomes tailored to your infrastructure needs without requiring further updates to the Terraform files.
 
 ---
 

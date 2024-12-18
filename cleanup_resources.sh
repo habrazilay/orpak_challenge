@@ -3,37 +3,86 @@
 # Exit immediately if a command exits with a non-zero status
 set -e
 
-# Delete Subnets
-echo "Deleting Subnets..."
-subnets=("subnet-0822693587de557d0" "subnet-0c1c732cc1c74f1c3" "subnet-052f1caf1cdd845d1" "subnet-07b8b00c52e7b1a79" "subnet-04918e177b3026490" "subnet-07d20277c641bd83e" "subnet-0fceb2e67ac082f4e" "subnet-057b0ef4df80b1d30")
-for subnet in "${subnets[@]}"; do
-    echo "Deleting subnet $subnet..."
-    aws ec2 delete-subnet --subnet-id $subnet || echo "Failed to delete $subnet. It may be in use or already deleted."
-done
+# Warning message
+echo "WARNING: If these resources were created using Terraform, it is highly recommended to use 'terraform destroy' instead of this script to avoid inconsistencies in state files."
+read -p "Do you wish to continue? (yes/no): " choice
+if [[ "$choice" != "yes" ]]; then
+    echo "Exiting script."
+    exit 0
+fi
 
-# Delete Route Tables
-echo "Deleting Route Tables..."
-route_tables=("rtb-04516aa95ca412c17" "rtb-04737ecdd28670e4f" "rtb-066f0b06c9c9356bd" "rtb-09aa58538a03a4b2c" "rtb-096ede1762c1e4db7" "rtb-09fcc2198eceb3625" "rtb-061ca078192ae7cfa" "rtb-0d91f39a42cc95dc3" "rtb-0714889bae3bd0a84")
-for rt in "${route_tables[@]}"; do
-    echo "Deleting route table $rt..."
-    aws ec2 delete-route-table --route-table-id $rt || echo "Failed to delete $rt. It may be in use or already deleted."
-done
+# Function to list and delete resources
+delete_resources() {
+    local resource_type=$1
+    local list_command=$2
+    local delete_command=$3
+    local id_key=$4
+
+    echo "Discovering $resource_type..."
+    resource_ids=$(eval "$list_command" | jq -r ".${id_key}[]")
+
+    if [[ -z "$resource_ids" ]]; then
+        echo "No $resource_type found."
+        return
+    fi
+
+    echo "Available $resource_type:"
+    echo "$resource_ids" | nl
+
+    echo "Options:"
+    echo "1. Delete all"
+    echo "2. Delete specific IDs"
+    echo "3. Skip"
+    read -p "Enter your choice: " option
+
+    case $option in
+        1)
+            echo "Deleting all $resource_type..."
+            for id in $resource_ids; do
+                echo "Deleting $resource_type $id..."
+                eval "$delete_command $id" || echo "Failed to delete $id."
+            done
+            ;;
+        2)
+            read -p "Enter the line numbers of IDs to delete (comma-separated): " lines
+            IFS=',' read -ra selected_lines <<< "$lines"
+            for line in "${selected_lines[@]}"; do
+                id=$(echo "$resource_ids" | sed -n "${line}p")
+                echo "Deleting $resource_type $id..."
+                eval "$delete_command $id" || echo "Failed to delete $id."
+            done
+            ;;
+        3)
+            echo "Skipping $resource_type."
+            ;;
+        *)
+            echo "Invalid option. Skipping $resource_type."
+            ;;
+    esac
+}
+
+# Delete subnets
+delete_resources "subnets" \
+    "aws ec2 describe-subnets --query 'Subnets[*].SubnetId'" \
+    "aws ec2 delete-subnet --subnet-id" \
+    "Subnets[*].SubnetId"
+
+# Delete route tables
+delete_resources "route tables" \
+    "aws ec2 describe-route-tables --query 'RouteTables[*].RouteTableId'" \
+    "aws ec2 delete-route-table --route-table-id" \
+    "RouteTables[*].RouteTableId"
 
 # Release Elastic IPs
-echo "Releasing Elastic IPs..."
-eips=("eipalloc-0b6d8bc065eced452" "eipalloc-095fea254dd947c48")
-for eip in "${eips[@]}"; do
-    echo "Releasing Elastic IP $eip..."
-    aws ec2 release-address --allocation-id $eip || echo "Failed to release $eip. It may already be released."
-done
+delete_resources "Elastic IPs" \
+    "aws ec2 describe-addresses --query 'Addresses[*].AllocationId'" \
+    "aws ec2 release-address --allocation-id" \
+    "Addresses[*].AllocationId"
 
-# Delete Security Groups
-echo "Deleting Security Groups..."
-security_groups=("sg-0c824be8132311f41" "sg-06325abd8174f4159" "sg-0d4e1502eacb52941" "sg-00636503c9f332f5c")
-for sg in "${security_groups[@]}"; do
-    echo "Deleting security group $sg..."
-    aws ec2 delete-security-group --group-id $sg || echo "Failed to delete $sg. It may be in use or already deleted."
-done
+# Delete security groups
+delete_resources "security groups" \
+    "aws ec2 describe-security-groups --query 'SecurityGroups[*].GroupId'" \
+    "aws ec2 delete-security-group --group-id" \
+    "SecurityGroups[*].GroupId"
 
 echo "Cleanup complete!"
-

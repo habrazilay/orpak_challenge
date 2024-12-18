@@ -22,12 +22,12 @@ output "public_subnets" {
 
 output "vpc_id" {
   description = "ID of the VPC"
-  value       = data.aws_vpc.default.id
+  value       = data.aws_vpc.main.id
 }
 
 output "cidr_block" {
   description = "The CIDR block of the VPC"
-  value       = data.aws_vpc.default.cidr_block
+  value       = data.aws_vpc.main.cidr_block
 }
 
 

@@ -2,16 +2,21 @@
 #############################################
 # Fetch Default VPC
 #############################################
-data "aws_vpc" "default" {
-  default = true
+resource "aws_vpc" "main" {
+  cidr_block           = var.vpc_cidr_block
+  enable_dns_support   = true
+  enable_dns_hostnames = true
+
+  tags = merge(var.common_tags, { Name = "main-vpc" })
 }
+
 
 #############################################
 # Create a Single Public Subnet in Default VPC
 #############################################
 resource "aws_subnet" "public" {
   vpc_id                  = data.aws_vpc.default.id
-  cidr_block              = "172.31.192.0/20"
+  cidr_block              = var.public_subnet_cidr
   availability_zone       = var.availability_zones[0]
   map_public_ip_on_launch = true
 
@@ -23,7 +28,7 @@ resource "aws_subnet" "public" {
 #############################################
 resource "aws_subnet" "private" {
   vpc_id                  = data.aws_vpc.default.id
-  cidr_block              = "172.31.208.0/20"
+  cidr_block              = var.private_subnet_cidr
   availability_zone       = var.availability_zones[1]
   map_public_ip_on_launch = false
 

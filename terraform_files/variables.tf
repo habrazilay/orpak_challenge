@@ -1,7 +1,17 @@
 # terraform_files/variables.tf
-variable "cidr_block" {
+variable "vpc_cidr_block" {
   description = "CIDR block for the VPC"
   default     = "10.0.0.0/16" # We can use env vars instead
+}
+
+variable "public_subnet_cidr" {
+  description = "CIDR block for the public subnet"
+  default     = "10.0.1.0/24"
+}
+
+variable "private_subnet_cidr" {
+  description = "CIDR block for the private subnet"
+  default     = "10.0.2.0/24"
 }
 
 variable "aws_region" {

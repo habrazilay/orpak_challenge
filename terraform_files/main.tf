@@ -24,9 +24,9 @@ module "eks" {
   cluster_name       = var.cluster_name
   cluster_version    = var.cluster_version
   vpc_id             = module.networks.vpc_id
-  subnet_ids         = ["subnet-0246176e0662618df"] #module.networks.private_subnets
-  private_subnets    = ["subnet-0246176e0662618df"] # module.networks.private_subnets
-  public_subnets     = ["subnet-060edf84a2343c800"] # module.networks.public_subnets
+  subnet_ids         = module.networks.private_subnets # ["subnet-0246176e0662618df"]
+  private_subnets    = module.networks.private_subnets # ["subnet-0246176e0662618df"]
+  public_subnets     = module.networks.public_subnets  # ["subnet-060edf84a2343c800"]
   node_group_desired = var.node_group_desired
   node_group_max     = var.node_group_max
   node_group_min     = var.node_group_min
@@ -41,7 +41,9 @@ module "eks" {
 # Instantiate the networks module
 module "networks" {
   source             = "./modules/networks"
-  cidr_block         = var.cidr_block
+  vpc_cidr_block         = module.networks.vpc_cidr_block
+  private_subnet_cidr    = module.networks.private_subnets
+  public_subnet_cidr     = module.networks.public_subnets
   availability_zones = var.availability_zones
   common_tags        = var.common_tags
   alb_sg_id          = module.security_groups.alb_sg_id # Pass the renamed variable

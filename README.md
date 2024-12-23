@@ -228,34 +228,131 @@ By modifying these values, the Terraform configuration becomes tailored to your 
 
 ---
 
-### **Step 4: Create Kubernetes Secrets**
 
-Store the database credentials securely as Kubernetes Secrets:
+### **Step 4: Deploy the Infrastructure**
 
+#### **Step 4.1: Initialize and Validate Terraform**
+
+**Initialize Terraform:**
 ```bash
-kubectl create secret generic postgres-secrets   --from-literal=DB_NAME=${DB_NAME}   --from-literal=DB_USER=${DB_USER}   --from-literal=DB_PASSWORD=${DB_PASSWORD}   --from-literal=DB_HOST=${DB_HOST}   --from-literal=DB_PORT=${DB_PORT}
+terraform init
+```
+
+**Validate the configuration:**
+```bash
+terraform validate
+```
+
+**Plan the deployment:**
+```bash
+terraform plan
 ```
 
 ---
 
-### **Step 5: Deploy the Infrastructure**
+#### **Step 4.2: Deploy Network and Security Groups**
 
-1. Initialize Terraform:
-   ```bash
-   terraform init
-   ```
-2. Validate the configuration:
-   ```bash
-   terraform validate
-   ```
-3. Plan the deployment:
-   ```bash
-   terraform plan
-   ```
-4. Apply the deployment:
-   ```bash
-   terraform apply -auto-approve
-   ```
+Uncomment the Network and Security Groups modules in `main.tf`:
+
+```hcl
+# terraform_files/modules/networks/main.tf
+# Provider configuration
+provider "aws" {
+  region = var.aws_region
+}
+
+# Instantiate the security groups module
+module "security_groups" {
+  source      = "./modules/security_groups"
+  vpc_id      = module.networks.vpc_id
+  cidr_block  = module.networks.cidr_block
+  common_tags = var.common_tags
+}
+
+# Instantiate the networks module
+module "networks" {
+  source               = "./modules/networks"
+  vpc_cidr_block       = var.vpc_cidr_block
+  private_subnet_cidrs = var.private_subnet_cidrs
+  public_subnet_cidrs  = var.public_subnet_cidrs
+  availability_zones   = var.availability_zones
+  common_tags          = var.common_tags
+  alb_sg_id            = module.security_groups.alb_sg_id
+}
+```
+
+**Apply the configuration to create the Network and Security Groups:**
+```bash
+terraform apply -auto-approve
+```
+
+Confirm that the output related to networks and security groups is generated. Verify the subnets, VPC, and security groups have been successfully created.
+
+---
+
+#### **Step 4.3: Deploy IAM Roles**
+
+Uncomment the IAM roles module in `main.tf`:
+
+```hcl
+# Instantiate the IAM roles
+module "iam" {
+  source = "./modules/iam"
+  common_tags = var.common_tags
+}
+```
+
+**Apply the configuration to create the required IAM roles:**
+```bash
+terraform apply -auto-approve
+```
+
+Verify that the output contains the IAM role ARNs, ensuring the roles are created and ready for use.
+
+---
+
+### **Step 5: Deploy EKS**
+
+#### **Step 5.1: Uncomment EKS Module**
+
+After verifying that the network, security groups, and IAM roles are successfully created, uncomment the EKS module in `main.tf`:
+
+```hcl
+# Instantiate the EKS module
+module "eks" {
+  source             = "./modules/eks"
+  cluster_name       = var.cluster_name
+  cluster_version    = var.cluster_version
+  vpc_id             = module.networks.vpc_id
+  subnet_ids         = module.networks.private_subnets
+  private_subnets    = module.networks.private_subnets
+  public_subnets     = module.networks.public_subnets
+  node_group_desired = var.node_group_desired
+  node_group_max     = var.node_group_max
+  node_group_min     = var.node_group_min
+  node_group_instance_types = var.node_group_instance_types
+  alb_sg_ids         = [module.security_groups.alb_sg_id]
+  cluster_role_arn   = module.iam.cluster_role_arn
+  additional_iam_role_arn  = module.iam.eks_node_group_role_arn
+  common_tags        = var.common_tags
+}
+```
+
+---
+
+#### **Step 5.2: Deploy EKS**
+
+**Plan the deployment:**
+```bash
+terraform plan
+```
+
+**Apply the configuration:**
+```bash
+terraform apply -auto-approve
+```
+
+Verify the output contains the EKS cluster ID, node group ARNs, and kubeconfig details.
 
 ---
 

@@ -249,6 +249,43 @@ Provide your:
 ---
 
 
+### **Step 2.2: Add Users to IAM Groups**
+
+To grant permissions for Terraform execution, add the required users to the `ci-cd-users` and `eks-admins` IAM groups.
+
+#### **Add Users to IAM Groups**
+
+1. **Log in to AWS Management Console**:
+   - Go to the [AWS IAM Console](https://console.aws.amazon.com/iam/).
+
+2. **Navigate to User Management**:
+   - In the left-hand menu, select **Users**.
+
+3. **Select or Create the User**:
+   - If the user does not exist:
+     - Click on **Add users** and create a new user with the desired username (e.g., `local-mac-user` or `github-actions-user`).
+     - Ensure the user has **Programmatic access** enabled.
+   - If the user exists, skip to the next step.
+
+4. **Assign the User to Groups**:
+   - Select the user from the list.
+   - Go to the **Groups** tab and click on **Add to groups**.
+   - Select the groups:
+     - `ci-cd-users`
+     - `eks-admins`
+   - Click **Add to groups**.
+
+5. **Verify Permissions**:
+   - Once the user is added to the groups, ensure the user has the necessary permissions by navigating to the **Permissions** tab under the user's details.
+   - Confirm that the policies associated with the `ci-cd-users` and `eks-admins` groups are listed.
+
+---
+
+#### **Why This Step is Necessary**
+Adding users to these groups ensures they inherit the necessary permissions to create and manage AWS resources during Terraform execution.
+
+---
+
 ### **Step 3: Define Variables**
 
 The global `variables.tf` file already contains all necessary variables for the Terraform configuration. You only need to modify the default values in the file according to your custom requirements. This approach ensures a centralized way of managing configurations.

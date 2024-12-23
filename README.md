@@ -76,23 +76,7 @@ cd orpak_challenge
 ---
 
 
-### **Step 2: Configure AWS Credentials**
-
-Set up your AWS Access Key and Secret Access Key:
-
-```bash
-aws configure
-```
-
-Provide your:
-
-- AWS Access Key ID
-- AWS Secret Access Key
-- Default Region (e.g., `us-east-1`)
-
----
-
-### **Step 2.1: Create IAM Groups and Assign Permissions**
+### **Step 2: Create IAM Groups and Assign Permissions**
 
 #### **Create the `ci-cd-users` Group**
 
@@ -248,6 +232,21 @@ Provide your:
 
 ---
 
+## **Step 2.1: Configure AWS Credentials**
+
+Set up your AWS Access Key and Secret Access Key:
+
+```bash
+aws configure
+```
+
+Provide your:
+
+- AWS Access Key ID
+- AWS Secret Access Key
+- Default Region (e.g., `us-east-1`)
+
+---
 
 
 ### **Step 3: Define Variables**

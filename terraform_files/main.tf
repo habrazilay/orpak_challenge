@@ -14,13 +14,13 @@ module "security_groups" {
 
 # Instantiate the networks module
 module "networks" {
-  source             = "./modules/networks"
-  vpc_cidr_block     = var.vpc_cidr_block
-  private_subnet_cidr = var.private_subnet_cidr
-  public_subnet_cidr  = var.public_subnet_cidr
-  availability_zones  = var.availability_zones
-  common_tags         = var.common_tags
-  alb_sg_id          = module.security_groups.alb_sg_id # Pass the renamed variable
+  source               = "./modules/networks"
+  vpc_cidr_block       = var.vpc_cidr_block
+  private_subnet_cidrs = var.private_subnet_cidrs
+  public_subnet_cidrs  = var.public_subnet_cidrs
+  availability_zones   = var.availability_zones
+  common_tags          = var.common_tags
+  alb_sg_id            = module.security_groups.alb_sg_id
 }
 
 
